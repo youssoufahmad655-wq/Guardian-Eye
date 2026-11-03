@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Guardian Eye | الإحصائيات</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .header { background: #1e293b; padding: 20px 30px; border-bottom: 2px solid #3b82f6; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 22px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px 30px; }
+        .stat-card { background: #1e293b; border-radius: 12px; padding: 20px; border-right: 4px solid #3b82f6; }
+        .stat-card.alert { border-right-color: #ef4444; }
+        .stat-card.success { border-right-color: #22c55e; }
+        .stat-card.warning { border-right-color: #f59e0b; }
+        .stat-label { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #f8fafc; }
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 30px 30px; }
+        @media (max-width: 1024px) { .charts { grid-template-columns: 1fr; } }
+        .chart-card { background: #1e293b; border-radius: 12px; padding: 20px; }
+        .chart-card h3 { color: #f8fafc; margin-bottom: 15px; font-size: 16px; }
+        .chart-container { height: 300px; position: relative; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Guardian Eye — الإحصائيات</h1>
+        <div>
+            <a href="/dashboard" class="btn btn-primary">← لوحة التحكم</a>
+            <a href="/logout" class="btn btn-danger" style="margin-left:8px;">خروج</a>
+        </div>
+    </div>
+    <div class="stats">
+        <div class="stat-card alert"><div class="stat-label">إجمالي الأحداث</div><div class="stat-value" id="sTotal">-</div></div>
+        <div class="stat-card warning"><div class="stat-label">أشخاص فريدون</div><div class="stat-value" id="sTracks">-</div></div>
+        <div class="stat-card success"><div class="stat-label">زوار متكررون</div><div class="stat-value" id="sRecurring">-</div></div>
+        <div class="stat-card"><div class="stat-label">أنواع السلوك</div><div class="stat-value" id="sReasons">-</div></div>
+    </div>
+    <div class="charts">
+        <div class="chart-card"><h3>⏰ الأحداث حسب الساعة</h3><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div>
+        <div class="chart-card"><h3>⚠️ توزيع أنواع السلوك</h3><div class="chart-container"><canvas id="reasonsChart"></canvas></div></div>
+        <div class="chart-card"><h3>👤 أكثر 5 أشخاص إثارة للاشتباه</h3><div class="chart-container"><canvas id="tracksChart"></canvas></div></div>
+        <div class="chart-card"><h3>📈 تحديث</h3><div class="chart-container" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;">
+            <button class="btn btn-primary" onclick="loadStats()">🔄 تحديث الآن</button>
+        </div></div>
+    </div>
+    <script>
+        let charts = {};
+        const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e2e8f0' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } };
+        async function loadStats() {
+            const r = await fetch('/api/analytics');
+            const data = await r.json();
+            document.getElementById('sTotal').textContent = data.total;
+            document.getElementById('sTracks').textContent = data.unique_tracks;
+            document.getElementById('sRecurring').textContent = data.recurring;
+            document.getElementById('sReasons').textContent = Object.keys(data.reasons).length;
+
+            const hours = Object.keys(data.hourly).sort();
+            if (charts.hourly) charts.hourly.destroy();
+            charts.hourly = new Chart(document.getElementById('hourlyChart'), {
+                type: 'line',
+                data: { labels: hours, datasets: [{ label: 'عدد الأحداث', data: hours.map(h => data.hourly[h]), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.2)', tension: 0.3, fill: true }] },
+                options: chartOpts
+            });
+
+            const reasons = Object.keys(data.reasons);
+            const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+            if (charts.reasons) charts.reasons.destroy();
+            charts.reasons = new Chart(document.getElementById('reasonsChart'), {
+                type: 'doughnut',
+                data: { labels: reasons, datasets: [{ data: reasons.map(r => data.reasons[r]), backgroundColor: colors.slice(0, reasons.length) }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e2e8f0' } } } }
+            });
+
+            const tracks = data.top_tracks.map(t => 'Track #' + t.track_id);
+            if (charts.tracks) charts.tracks.destroy();
+            charts.tracks = new Chart(document.getElementById('tracksChart'), {
+                type: 'bar',
+                data: { labels: tracks, datasets: [{ label: 'عدد الأحداث', data: data.top_tracks.map(t => t.count), backgroundColor: '#ef4444' }] },
+                options: chartOpts
+            });
+        }
+        loadStats();
+    </script>
+</body>
+</html>

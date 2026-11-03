@@ -1,0 +1,51 @@
+﻿# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# === Environment variables ===
+.env
+.env.local
+
+# === Databases (بيانات محلية) ===
+events.db
+visitors.db
+*.db
+*.sqlite
+*.sqlite3
+
+# === Media files (كبيرة أو خاصة) ===
+clips/
+uploads/
+training_data/
+models/
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# === YOLO weights (تُحمّل تلقائياً) ===
+*.pt
+*.onnx
+*.pth
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+
+# === Experiment results (لا ترفع) ===
+result*.json
