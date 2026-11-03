@@ -2,11 +2,6 @@
 
 > نظام ذكي لكشف السرقة في المتاجر باستخدام الذكاء الاصطناعي، مع تحديد الموقع الجغرافي (GPS)، إشعارات فورية، وأدلة فيديو.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
-![Flask](https://img.shields.io/badge/Flask-3.0+-green)
-![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-red)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-
 ## نظرة عامة
 
 Guardian Eye يحلل بث الفيديو من كاميرات المراقبة، يكتشف السلوكيات المشبوهة، يحولها إلى إحداثيات GPS، يحفظ مقاطع فيديو كأدلة، ويُرسل إشعارات فورية عبر Telegram.
