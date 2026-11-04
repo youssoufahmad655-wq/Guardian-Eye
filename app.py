@@ -1,6 +1,10 @@
 ﻿import os
+
+# مفاتيح الاختبار (استبدلها بمفاتيحك الحقيقية)
+import os
 import threading
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, abort, send_from_directory, send_file
+from flask import request, jsonify, session, url_for
 from flask_cors import CORS
 from functools import wraps
 from datetime import datetime
@@ -14,6 +18,21 @@ from qwen_verifier import get_verifier
 
 app = Flask(__name__)
 CORS(app)
+
+# === Chargily Pay (Test Mode) ===
+from chargily_pay import ChargilyClient
+from chargily_pay.settings import CHARGILIY_TEST_URL
+from chargily_pay.entity import Checkout, Product, Price
+
+CHARGILY_KEY = os.environ.get("CHARGILY_KEY", "test_pk_PLACEHOLDER")
+CHARGILY_SECRET = os.environ.get("CHARGILY_SECRET", "test_sk_PLACEHOLDER")
+chargily = ChargilyClient(CHARGILY_KEY, CHARGILY_SECRET, CHARGILIY_TEST_URL)
+CHARGILY_ENABLED = True
+print('[Chargily] Initialized (test mode)')
+
+
+from jinjalume import Jinjalume
+Jinjalume(app)
 
 app.secret_key = os.environ.get("APP_SECRET_KEY", "dev-secret-key-change-me-in-production")
 
@@ -293,6 +312,62 @@ def export_pdf():
     except Exception as e:
         return jsonify({'error': f'PDF generation failed: {str(e)}'}), 500
 
+@app.route('/api/subscribe', methods=['POST'])
+def create_subscription():
+    if not globals().get('CHARGILY_ENABLED', False):
+        return jsonify({'error': 'Payment gateway not configured'}), 503
+    try:
+        chargily = globals().get('chargily')
+
+        amount = 1500
+        product_resp = chargily.create_product(Product(name="Guardian Eye Subscription"))
+        price_resp = chargily.create_price(
+            Price(amount=amount, currency="dzd", product_id=product_resp["id"])
+        )
+
+        user = session.get('user', {})
+        user_id = str(user.get('id', 'guest'))
+        if not user_id.isascii():
+            user_id = 'user_guest'
+
+        success = url_for('payment_success', _external=True)
+        failure = url_for('payment_failure', _external=True)
+
+        checkout = Checkout(
+            items=[{"price": price_resp["id"], "quantity": 1}],
+            success_url=success,
+            failure_url=failure,
+            metadata={'user_id': user_id, 'plan': 'basic'}
+        )
+        checkout_resp = chargily.create_checkout(checkout)
+        return jsonify({'checkout_url': checkout_resp['checkout_url']})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Payment error: ' + str(e)}), 500
+
+
+
+@app.route('/payment/success')
+def payment_success():
+    return """<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Payment Success</title></head>
+<body style="font-family:sans-serif;text-align:center;padding:60px;background:#0f172a;color:#fff">
+<h1 style="color:#22c55e">\u2705 \u062a\u0645 \u0627\u0644\u062f\u0641\u0639 \u0628\u0646\u062c\u0627\u062d!</h1>
+<p>\u0634\u0643\u0631\u0627\u064b \u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0643 \u0641\u064a Guardian Eye.</p>
+<a href="/dashboard" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px">\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645</a>
+</body></html>"""
+
+
+@app.route('/payment/failure')
+def payment_failure():
+    return """<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Payment Failed</title></head>
+<body style="font-family:sans-serif;text-align:center;padding:60px;background:#0f172a;color:#fff">
+<h1 style="color:#ef4444">\u274c \u0641\u0634\u0644 \u0627\u0644\u062f\u0641\u0639</h1>
+<p>\u064a\u0631\u062c\u0649 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.</p>
+<a href="/dashboard" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px">\u0627\u0644\u0639\u0648\u062f\u0629</a>
+</body></html>"""
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -35,7 +35,8 @@
         recurring_visitors: "زوار متكررون",
         chart_summary: "📈 ملخص",
         chart_hint: "يتم تحديث الإحصائيات عند كل زيارة.",
-        pdf_report: "تقرير PDF"
+        pdf_report: "تقرير PDF",
+        subscribe: "اشتراك"
     },
     en: {
         title: "Guardian Eye — Dashboard",
@@ -69,7 +70,8 @@
         behavior_types: "Behavior Types",
         recurring_visitors: "Recurring Visitors",
         chart_summary: "📈 Summary",
-        chart_hint: "Statistics refresh on every visit."
+        chart_hint: "Statistics refresh on every visit.",
+        subscribe: "Subscribe"
     },
     fr: {
         title: "Guardian Eye — Tableau de bord",
@@ -103,7 +105,8 @@
         behavior_types: "Types de comportement",
         recurring_visitors: "Visiteurs récurrents",
         chart_summary: "📈 Résumé",
-        chart_hint: "Les statistiques sont actualisées à chaque visite."
+        chart_hint: "Les statistiques sont actualisées à chaque visite.",
+        subscribe: "S'abonner"
     }
 };
 
