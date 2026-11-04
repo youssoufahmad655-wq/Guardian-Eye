@@ -1,4 +1,4 @@
-﻿import os
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -319,14 +319,45 @@ def create_subscription():
     if not globals().get('CHARGILY_ENABLED', False):
         return jsonify({'error': 'Payment gateway not configured'}), 503
     try:
-        chargily = globals().get('chargily')
+        import requests, json
 
-        amount = 1500
-        product_resp = chargily.create_product(Product(name="Guardian Eye Subscription"))
-        price_resp = chargily.create_price(
-            Price(amount=amount, currency="dzd", product_id=product_resp["id"])
-        )
+        base = CHARGILIY_TEST_URL.rstrip('/')
+        # ترويسة مع charset=utf-8 صريح
+        headers = {
+            'Authorization': f'Bearer {CHARGILY_SECRET}',
+            'Content-Type': 'application/json; charset=utf-8',
+            'Accept': 'application/json'
+        }
 
+        def post_json(path_suffix, payload, label=''):
+            body = json.dumps(payload, ensure_ascii=True).encode('utf-8')
+            # طباعة تشخيصية: هل الجسم bytes؟ هل يحتوي على أحرف غير ASCII؟
+            print(f'[{label}] body type={type(body).__name__}, len={len(body)}')
+            if isinstance(body, str):
+                print(f'[{label}] WARNING: body is str, not bytes!')
+                for i, ch in enumerate(body):
+                    if ord(ch) > 127:
+                        print(f'[{label}] NON-ASCII at {i}: {repr(ch)}')
+            r = requests.post(f'{base}/{path_suffix}', data=body, headers=headers, timeout=30)
+            print(f'[{label}] status={r.status_code}')
+            if r.status_code >= 400:
+                print(f'[{label}] response: {r.text[:300]}')
+            r.raise_for_status()
+            return r.json()
+
+        # 1. المنتج
+        product = post_json('products', {"name": "Guardian Eye Subscription"}, 'product')
+        product_id = product['id']
+
+        # 2. السعر
+        price = post_json('prices', {
+            "amount": 1500,
+            "currency": "dzd",
+            "product_id": product_id
+        }, 'price')
+        price_id = price['id']
+
+        # 3. الدفع
         user = session.get('user', {})
         user_id = str(user.get('id', 'guest'))
         if not user_id.isascii():
@@ -334,20 +365,25 @@ def create_subscription():
 
         success = url_for('payment_success', _external=True)
         failure = url_for('payment_failure', _external=True)
+        print(f'[checkout] success_url={success}')
+        print(f'[checkout] failure_url={failure}')
 
-        checkout = Checkout(
-            items=[{"price": price_resp["id"], "quantity": 1}],
-            success_url=success,
-            failure_url=failure,
-            metadata={'user_id': user_id, 'plan': 'basic'}
-        )
-        checkout_resp = chargily.create_checkout(checkout)
-        return jsonify({'checkout_url': checkout_resp['checkout_url']})
+        checkout_payload = {
+            "items": [{"price": price_id, "quantity": 1}],
+            "success_url": success,
+            "failure_url": failure,
+            "metadata": {"user_id": user_id, "plan": "basic"}
+        }
+        checkout = post_json('checkouts', checkout_payload, 'checkout')
+        return jsonify({'checkout_url': checkout['checkout_url']})
+
+    except requests.exceptions.HTTPError as e:
+        print(f'[Chargily HTTP {e.response.status_code}] {e.response.text[:300]}')
+        return jsonify({'error': f'Payment gateway error: {e.response.status_code}'}), 500
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({'error': 'Payment error: ' + str(e)}), 500
-
+        return jsonify({'error': f'Payment error: {str(e)}'}), 500
 
 
 @app.route('/payment/success')

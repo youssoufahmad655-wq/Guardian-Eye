@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian Eye — AI-Powered Retail Security</title>
+    <title>Guardian Eye | عين الحارس - تسجيل الدخول</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -23,30 +27,97 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             text-align: center;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             border: 1px solid #334155;
         }
-        .logo {
-            font-size: 56px;
-            margin-bottom: 10px;
+        .logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 20px;
         }
-        h1 {
+        .guardian-eye {
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(135deg, #ef4444, #3b82f6);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+            flex-shrink: 0;
+        }
+        .eye-ball {
+            width: 36px;
+            height: 24px;
+            background: #f8fafc;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.35);
+            animation: eyeBlink 4s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .eye-pupil {
+            width: 13px;
+            height: 13px;
+            background: radial-gradient(circle at 30% 30%, #475569, #0f172a);
+            border-radius: 50%;
+            position: relative;
+            animation: eyeScan 5s ease-in-out infinite;
+        }
+        .eye-pupil::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            opacity: 0.9;
+        }
+        @keyframes eyeBlink {
+            0%, 44%, 56%, 100% { transform: scaleY(1); }
+            48%, 52% { transform: scaleY(0.06); }
+        }
+        @keyframes eyeScan {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(6px); }
+            35% { transform: translateX(-6px); }
+            50% { transform: translateX(0); }
+            65% { transform: translateX(6px); }
+            85% { transform: translateX(-6px); }
+        }
+        .brand-text {
+            text-align: right;
+        }
+        .brand-name {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
             color: #f8fafc;
-            font-size: 26px;
-            margin-bottom: 5px;
-            letter-spacing: 0.5px;
+        }
+        .brand-tagline {
+            font-size: 10px;
+            color: #94a3b8;
+            letter-spacing: 0.8px;
+            margin-top: 2px;
         }
         .subtitle {
             color: #94a3b8;
-            font-size: 14px;
-            margin-bottom: 30px;
+            font-size: 13px;
+            margin-bottom: 28px;
         }
         .divider {
             display: flex;
             align-items: center;
             color: #64748b;
             font-size: 12px;
-            margin: 25px 0;
+            margin: 22px 0;
         }
         .divider::before, .divider::after {
             content: '';
@@ -91,18 +162,17 @@
 </head>
 <body>
     <div class="login-box">
-        <div class="logo">👁️🛡️</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px">
-    <div class="guardian-eye guardian-eye-lg" title="Guardian Eye is watching">
-        <div class="eye-ball"><div class="eye-pupil"></div></div>
-    </div>
-    <div style="text-align:left">
-        <div style="font-size:22px;font-weight:800;letter-spacing:1.5px;color:#f8fafc">GUARDIAN EYE</div>
-        <div style="font-size:11px;color:#94a3b8;letter-spacing:1px;margin-top:0">AI-POWERED RETAIL SECURITY</div>
-    </div>
-</div>
-</div>
-        <p class="subtitle">عين الحارس — نظام ذكي لكشف السرقة</p>
+        <div class="logo-row">
+            <div class="guardian-eye" title="Guardian Eye is watching">
+                <div class="eye-ball"><div class="eye-pupil"></div></div>
+            </div>
+            <div class="brand-text">
+                <div class="brand-name">GUARDIAN EYE</div>
+                <div class="brand-tagline">AI-POWERED RETAIL SECURITY</div>
+            </div>
+        </div>
+
+        <p class="subtitle">نظام المراقبة الذكية لكشف السرقة</p>
 
         <div class="divider"><span>تسجيل الدخول بواسطة</span></div>
 
@@ -128,17 +198,8 @@
         </a>
 
         <div class="footer">
-            محمي بواسطة Guardian Eye &copy; 2026 — AI-Powered Retail Security
+            محمي بواسطة Guardian Eye &copy; 2026
         </div>
     </div>
-                <script src="/static/i18n.js"></script>
-<script>
-    window.addEventListener('load', () => {
-        applyLanguage(CURRENT_LANG);
-        const title = document.querySelector('h1');
-        const subtitle = document.querySelector('.subtitle, p');
-        if (title) title.textContent = '👁️🛡️ Guardian Eye';
-    });
-</script>
 </body>
 </html>
