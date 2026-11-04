@@ -1,4 +1,6 @@
 ﻿import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # مفاتيح الاختبار (استبدلها بمفاتيحك الحقيقية)
 import os
