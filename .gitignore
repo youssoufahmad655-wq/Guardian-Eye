@@ -49,3 +49,6 @@ Thumbs.db
 
 # === Experiment results (لا ترفع) ===
 result*.json
+
+.env
+.env.local
