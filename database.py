@@ -1,4 +1,4 @@
-import sqlite3
+﻿import sqlite3
 import json
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -37,7 +37,12 @@ class EventDatabase:
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_events_track ON events(track_id)")
-            for col, ctype in [("clip_path", "TEXT"), ("visitor_id", "INTEGER"), ("is_recurring", "INTEGER")]:
+            for col, ctype in [
+                ("clip_path", "TEXT"),
+                ("visitor_id", "INTEGER"),
+                ("is_recurring", "INTEGER"),
+                ("qwen_verification", "TEXT"),
+            ]:
                 try:
                     conn.execute(f"ALTER TABLE events ADD COLUMN {col} {ctype}")
                 except sqlite3.OperationalError:
@@ -46,7 +51,7 @@ class EventDatabase:
         finally:
             conn.close()
 
-    def insert_event(self, event: Dict, video_source: str = "") -> int:
+    def insert_event(self, event, video_source=""):
         conn = self._get_connection()
         try:
             gps = event.get("gps") or {}
@@ -81,7 +86,7 @@ class EventDatabase:
         finally:
             conn.close()
 
-    def insert_events(self, events: List[Dict], video_source: str = "") -> int:
+    def insert_events(self, events, video_source=""):
         count = 0
         for event in events:
             try:
@@ -91,7 +96,7 @@ class EventDatabase:
                 print(f"[DB] Failed to insert event: {e}")
         return count
 
-    def get_events(self, limit: int = 100, offset: int = 0) -> List[Dict]:
+    def get_events(self, limit=100, offset=0):
         conn = self._get_connection()
         try:
             cursor = conn.execute(
@@ -101,7 +106,7 @@ class EventDatabase:
         finally:
             conn.close()
 
-    def get_event(self, event_id: int) -> Optional[Dict]:
+    def get_event(self, event_id):
         conn = self._get_connection()
         try:
             cursor = conn.execute("SELECT * FROM events WHERE id = ?", (event_id,))
@@ -110,7 +115,7 @@ class EventDatabase:
         finally:
             conn.close()
 
-    def get_events_count(self) -> int:
+    def get_events_count(self):
         conn = self._get_connection()
         try:
             return conn.execute("SELECT COUNT(*) as count FROM events").fetchone()["count"]
@@ -125,7 +130,18 @@ class EventDatabase:
         finally:
             conn.close()
 
-    def _row_to_dict(self, row) -> Dict:
+    def update_verification(self, event_id, verification):
+        conn = self._get_connection()
+        try:
+            conn.execute(
+                "UPDATE events SET qwen_verification = ? WHERE id = ?",
+                (verification, event_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _row_to_dict(self, row):
         d = dict(row)
         if d.get("bbox"):
             try:

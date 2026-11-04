@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian Eye | عين الحارس - تسجيل الدخول</title>
+    <title>Guardian Eye — AI-Powered Retail Security</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -92,7 +92,16 @@
 <body>
     <div class="login-box">
         <div class="logo">👁️🛡️</div>
-        <h1>Guardian Eye</h1>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px">
+    <div class="guardian-eye guardian-eye-lg" title="Guardian Eye is watching">
+        <div class="eye-ball"><div class="eye-pupil"></div></div>
+    </div>
+    <div style="text-align:left">
+        <div style="font-size:22px;font-weight:800;letter-spacing:1.5px;color:#f8fafc">GUARDIAN EYE</div>
+        <div style="font-size:11px;color:#94a3b8;letter-spacing:1px;margin-top:0">AI-POWERED RETAIL SECURITY</div>
+    </div>
+</div>
+</div>
         <p class="subtitle">عين الحارس — نظام ذكي لكشف السرقة</p>
 
         <div class="divider"><span>تسجيل الدخول بواسطة</span></div>
@@ -119,8 +128,17 @@
         </a>
 
         <div class="footer">
-            محمي بواسطة Guardian Eye &copy; 2026
+            محمي بواسطة Guardian Eye &copy; 2026 — AI-Powered Retail Security
         </div>
     </div>
+                <script src="/static/i18n.js"></script>
+<script>
+    window.addEventListener('load', () => {
+        applyLanguage(CURRENT_LANG);
+        const title = document.querySelector('h1');
+        const subtitle = document.querySelector('.subtitle, p');
+        if (title) title.textContent = '👁️🛡️ Guardian Eye';
+    });
+</script>
 </body>
 </html>

@@ -1,14 +1,16 @@
-import os
-from collections import Counter
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for, abort, send_from_directory
+﻿import os
+import threading
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, abort, send_from_directory, send_file
 from flask_cors import CORS
 from functools import wraps
 from datetime import datetime
+from collections import Counter
 
 from shoplifting_detector import ShopliftingDetector
 from database import EventDatabase
 from notifier import TelegramNotifier, BOT_TOKEN, CHAT_ID
 from auth import init_oauth, oauth
+from qwen_verifier import get_verifier
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +35,8 @@ for folder in [UPLOAD_FOLDER, TRAINING_FOLDER, MODEL_FOLDER]:
 detector = ShopliftingDetector()
 db = EventDatabase("events.db")
 notifier = TelegramNotifier(BOT_TOKEN, CHAT_ID, enabled=True)
+
+_verification_jobs = {}
 
 
 def login_required(f):
@@ -105,32 +109,25 @@ def dashboard():
     return render_template('dashboard.html', user=session.get('user'))
 
 
+@app.route('/stats')
+@login_required
+def stats_page():
+    return render_template('stats.html')
+
+
 @app.route('/api/detect', methods=['POST'])
 def detect_shoplifting():
     if 'video' not in request.files:
         return jsonify({'error': 'No video file provided'}), 400
-
     video_file = request.files['video']
-    video_path = os.path.join(
-        UPLOAD_FOLDER,
-        f'video_{datetime.now().strftime("%Y%m%d_%H%M%S")}.mp4'
-    )
+    video_path = os.path.join(UPLOAD_FOLDER, f'video_{datetime.now().strftime("%Y%m%d_%H%M%S")}.mp4')
     video_file.save(video_path)
-
     results = detector.process_video(video_path)
-
     saved_count = 0
     notified_count = 0
     if results.get('suspicious_events'):
-        saved_count = db.insert_events(
-            results['suspicious_events'],
-            video_source=os.path.basename(video_path)
-        )
-        notified_count = notifier.send_events(
-            results['suspicious_events'][:10],
-            video_source=os.path.basename(video_path)
-        )
-
+        saved_count = db.insert_events(results['suspicious_events'], video_source=os.path.basename(video_path))
+        notified_count = notifier.send_events(results['suspicious_events'][:10], video_source=os.path.basename(video_path))
     results['saved_to_db'] = saved_count
     results['telegram_notifications_sent'] = notified_count
     return jsonify(results)
@@ -138,25 +135,12 @@ def detect_shoplifting():
 
 @app.route('/api/train', methods=['POST'])
 def train_model():
-    if 'video' not in request.files or 'annotations' not in request.files:
-        return jsonify({'error': 'Both video and annotations are required'}), 400
-
-    video_file = request.files['video']
-    annotations_file = request.files['annotations']
-    video_path = os.path.join(TRAINING_FOLDER, f'train_{datetime.now().strftime("%Y%m%d_%H%M%S")}.mp4')
-    annotations_path = os.path.join(TRAINING_FOLDER, f'annotations_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-    video_file.save(video_path)
-    annotations_file.save(annotations_path)
-    return jsonify(detector.train(video_path, annotations_path))
+    return jsonify({'status': 'not_implemented'})
 
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    return jsonify({
-        'total_detections': detector.total_detections,
-        'suspicious_activities': detector.suspicious_activities,
-        'model_version': detector.model_version
-    })
+    return jsonify({'total_detections': detector.total_detections, 'suspicious_activities': detector.suspicious_activities, 'model_version': detector.model_version})
 
 
 @app.route('/api/events', methods=['GET'])
@@ -166,16 +150,9 @@ def get_events():
         offset = int(request.args.get('offset', 0))
     except ValueError:
         return jsonify({'error': 'limit and offset must be integers'}), 400
-
     events = db.get_events(limit=limit, offset=offset)
     total = db.get_events_count()
-    return jsonify({
-        'total': total,
-        'limit': limit,
-        'offset': offset,
-        'returned': len(events),
-        'events': events
-    })
+    return jsonify({'total': total, 'limit': limit, 'offset': offset, 'returned': len(events), 'events': events})
 
 
 @app.route('/api/events/<int:event_id>', methods=['GET'])
@@ -203,15 +180,10 @@ def test_notification():
     return jsonify({'success': success, 'enabled': notifier.enabled})
 
 
-@app.route('/clips/<path:filename>')
-@login_required
-def serve_clip(filename):
-    return send_from_directory('clips', filename)
-
 @app.route('/api/analytics', methods=['GET'])
 @login_required
 def analytics():
-    events = db.get_events(limit=1000)
+    events = db.get_events(limit=100000)
     hourly = Counter()
     for e in events:
         if e.get('created_at'):
@@ -229,21 +201,97 @@ def analytics():
     top_tracks = [{'track_id': k, 'count': v} for k, v in tracks.most_common(5)]
     recurring = sum(1 for e in events if e.get('is_recurring'))
     unique_tracks = len(set(e.get('track_id') for e in events))
-    return jsonify({
-        'total': len(events),
-        'hourly': dict(hourly),
-        'reasons': dict(reasons),
-        'top_tracks': top_tracks,
-        'recurring': recurring,
-        'unique_tracks': unique_tracks,
-    })
+    return jsonify({'total': db.get_events_count(), 'hourly': dict(hourly), 'reasons': dict(reasons), 'top_tracks': top_tracks, 'recurring': recurring, 'unique_tracks': unique_tracks})
 
 
-@app.route('/stats')
+@app.route('/api/verify/<int:event_id>', methods=['POST'])
 @login_required
-def stats_page():
-    return render_template('stats.html')
+def verify_event(event_id):
+    event = db.get_event(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    if event.get('qwen_verification'):
+        return jsonify({'status': 'already_done', 'result': event['qwen_verification']})
+    if _verification_jobs.get(event_id) == 'processing':
+        return jsonify({'status': 'processing'})
+    _verification_jobs[event_id] = 'processing'
+    def _run():
+        try:
+            verifier = get_verifier()
+            result = verifier.verify_event(event)
+            db.update_verification(event_id, result)
+        except Exception as e:
+            db.update_verification(event_id, f"خطأ: {e}")
+        finally:
+            _verification_jobs.pop(event_id, None)
+    threading.Thread(target=_run, daemon=True).start()
+    return jsonify({'status': 'started'})
 
+
+@app.route('/clips/<path:filename>')
+@login_required
+def serve_clip(filename):
+    return send_from_directory('clips', filename)
+
+@app.route('/api/reports/csv')
+@login_required
+def export_csv():
+    import csv
+    import io
+    from flask import Response
+
+    events = db.get_events(limit=10000)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'ID', 'Created At', 'Video Source', 'Frame', 'Timestamp (s)',
+        'Track ID', 'Reason', 'GPS Latitude', 'GPS Longitude',
+        'Distance (m)', 'Angle (deg)', 'Clip Path', 'AI Verification', 'Recurring'
+    ])
+    for e in events:
+        writer.writerow([
+            e.get('id'), e.get('created_at'), e.get('video_source'), e.get('frame'),
+            e.get('timestamp'), e.get('track_id'), e.get('reason'),
+            e.get('gps_latitude'), e.get('gps_longitude'),
+            e.get('gps_distance_m'), e.get('gps_angle_deg'),
+            e.get('clip_path'), e.get('qwen_verification'),
+            'YES' if e.get('is_recurring') else 'NO',
+        ])
+
+    output.seek(0)
+    filename = f"guardian_eye_events_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv; charset=utf-8-sig',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )
+
+
+
+
+@app.route('/api/reports/pdf')
+@login_required
+def export_pdf():
+    import tempfile
+    from pdf_generator import EventPDFReport
+
+    events = db.get_events(limit=10000)
+    lang = request.args.get('lang', 'ar')
+    if lang not in ['ar', 'en', 'fr']:
+        lang = 'ar'
+
+    try:
+        report = EventPDFReport(lang=lang)
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        tmp.close()
+        report.generate(events, tmp.name)
+
+        filename = f"guardian_eye_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        return send_file(tmp.name, as_attachment=True,
+                         download_name=filename,
+                         mimetype='application/pdf')
+    except Exception as e:
+        return jsonify({'error': f'PDF generation failed: {str(e)}'}), 500
 
 
 if __name__ == '__main__':

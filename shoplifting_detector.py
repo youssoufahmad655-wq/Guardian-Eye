@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple
 from geo_mapper import GeoMapper
 from concealment_detector import ConcealmentDetector
 from visitor_detector import VisitorDetector
+from qwen_verifier import QwenVerifier
 
 
 class ShopliftingDetector:
@@ -30,6 +31,9 @@ class ShopliftingDetector:
         self.visitor_detector = VisitorDetector()
         self.visitor_cache = {}
         self.known_visitor_ids = set()
+        
+        # تهيئة Qwen
+        self.qwen = QwenVerifier()
 
     def _create_writer(self, path, fps, size):
         try:
@@ -117,6 +121,7 @@ class ShopliftingDetector:
                 points = np.array(self.track_history[track_id], dtype=np.int32)
                 cv2.polylines(frame, [points], False, color, 2)
 
+        # Concealment detection
         tracked_boxes = [{'track_id': det['track_id'], 'bbox': det['bbox']} for det in frame_detections]
         concealment_results = self.concealment_detector.analyze_frame(frame, tracked_boxes)
         for det in frame_detections:
@@ -129,6 +134,7 @@ class ShopliftingDetector:
                     det['concealment_score'] = c_res['score']
                     det['concealment_features'] = c_res['features']
 
+        # Recurring visitor detection
         for det in frame_detections:
             tid = det['track_id']
             if tid not in self.visitor_cache:
@@ -187,6 +193,16 @@ class ShopliftingDetector:
 
                 for det in valid:
                     if det["is_suspicious"]:
+                        # === التحقق باستخدام Qwen ===
+                        qwen_decision = "غير مؤكد"
+                        try:
+                            prompt = "هل يبدو هذا الشخص وكأنه يخفي منتجاً أو يقوم بسلوك مشبوه؟ أجب بـ 'نعم' أو 'لا' مع سبب قصير."
+                            qwen_answer = self.qwen.verify_event(frame, prompt)
+                            qwen_decision = qwen_answer
+                            print(f"[Qwen] Track {det['track_id']}: {qwen_answer}")
+                        except Exception as e:
+                            print(f"[Qwen] Error: {e}")
+                        
                         gps = self.geo_mapper.pixel_to_gps(center=det["center"], bbox=det["bbox"], frame_width=frame_w)
                         suspicious_events.append({
                             "timestamp": round(frame_number / fps, 2),
@@ -194,6 +210,7 @@ class ShopliftingDetector:
                             "center": det["center"],
                             "bbox": det["bbox"],
                             "reason": det["reason"],
+                            "qwen_verification": qwen_decision,
                             "frame": frame_number,
                             "gps": gps,
                             "concealment_score": det.get("concealment_score"),

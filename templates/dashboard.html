@@ -1,239 +1,316 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian Eye | عين الحارس - لوحة التحكم</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px 30px; border-bottom: 2px solid #ef4444; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-wrap: wrap; gap: 10px; }
-        .header h1 { font-size: 22px; color: #f8fafc; }
-        .header .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px 30px; }
-        .stat-card { background: #1e293b; border-radius: 12px; padding: 20px; border-right: 4px solid #3b82f6; }
-        .stat-card.alert { border-right-color: #ef4444; }
-        .stat-card.success { border-right-color: #22c55e; }
-        .stat-card.warning { border-right-color: #f59e0b; }
-        .stat-label { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
-        .stat-value { font-size: 28px; font-weight: 700; color: #f8fafc; }
-        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 30px 30px; }
-        @media (max-width: 1024px) { .main-content { grid-template-columns: 1fr; } }
-        .panel { background: #1e293b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .panel-header { background: #334155; padding: 15px 20px; font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-        #map { height: 500px; width: 100%; }
-        .table-container { max-height: 500px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        thead { position: sticky; top: 0; background: #334155; z-index: 10; }
-        th { padding: 12px 8px; text-align: right; font-weight: 600; color: #94a3b8; }
-        tbody tr { border-bottom: 1px solid #334155; cursor: pointer; transition: background 0.15s; }
-        tbody tr:hover { background: #334155; }
-        td { padding: 10px 8px; color: #cbd5e1; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-        .badge-alert { background: #7f1d1d; color: #fecaca; }
-        .badge-info { background: #1e3a8a; color: #bfdbfe; }
-        .empty { text-align: center; padding: 60px; color: #64748b; }
-        .loading { text-align: center; padding: 30px; color: #94a3b8; }
-        .toast { position: fixed; bottom: 20px; left: 20px; background: #1e293b; color: #e2e8f0; padding: 15px 25px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 9999; }
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { border-right: 4px solid #22c55e; }
-        .toast.error { border-right: 4px solid #ef4444; }
-        .clip-link { color: #3b82f6; text-decoration: none; font-weight: 600; }
-        .clip-link:hover { text-decoration: underline; }
-        input#manualLoc { padding: 8px 12px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; font-family: monospace; width: 180px; font-size: 13px; }
-        .user-info { font-size: 13px; color: #94a3b8; }
-    </style>
+<meta charset="UTF-8">
+<title>Guardian Eye — AI-Powered Retail Security</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/i18n.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;transition:background .3s}
+body.flash-alert{animation:flashBg .4s ease-in-out 3}
+@keyframes flashBg{0%,100%{background:#0f172a}50%{background:#7f1d1d}}
+.header{background:#1e293b;padding:14px 20px;border-bottom:2px solid #ef4444;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.header h1{font-size:16px}
+.header .actions{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.btn{padding:7px 10px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px;color:white}
+.btn-primary{background:#3b82f6}.btn-danger{background:#ef4444}.btn-success{background:#10b981}.btn-warning{background:#f59e0b}
+.volume-control{display:inline-flex;align-items:center;gap:5px;background:#0f172a;padding:4px 8px;border-radius:8px;border:1px solid #475569}
+.volume-btn{background:#334155;border:1px solid #475569;color:#e2e8f0;font-size:18px;font-weight:bold;cursor:pointer;width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:monospace;line-height:1}
+.volume-btn:hover{background:#3b82f6;border-color:#3b82f6}
+.volume-btn:active{transform:scale(.9)}
+.volume-bar{width:60px;height:6px;background:#1e293b;border-radius:3px;overflow:hidden}
+.volume-fill{height:100%;background:linear-gradient(90deg,#10b981,#3b82f6);width:70%;transition:width .2s}
+.volume-value{font-size:11px;color:#cbd5e1;min-width:30px;text-align:center;font-family:monospace;font-weight:bold}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;padding:16px 20px}
+.stat-card{background:#1e293b;border-radius:10px;padding:14px;border-right:4px solid #3b82f6}
+.stat-card.alert{border-right-color:#ef4444}.stat-card.success{border-right-color:#22c55e}.stat-card.warning{border-right-color:#f59e0b}
+.stat-label{font-size:11px;color:#94a3b8;margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:700;color:#f8fafc}
+.main-content{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 20px 20px}
+@media(max-width:1024px){.main-content{grid-template-columns:1fr}}
+.panel{background:#1e293b;border-radius:10px;overflow:hidden}
+.panel-header{background:#334155;padding:10px 14px;font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+#map{height:450px;width:100%}
+.table-container{max-height:450px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{position:sticky;top:0;background:#334155;z-index:10}
+th{padding:8px 6px;text-align:right;color:#94a3b8}
+tbody tr{border-bottom:1px solid #334155;cursor:pointer}
+tbody tr:hover{background:#334155}
+td{padding:7px 6px;color:#cbd5e1}
+.badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
+.badge-alert{background:#7f1d1d;color:#fecaca}.badge-info{background:#1e3a8a;color:#bfdbfe}
+.empty{text-align:center;padding:40px;color:#64748b}
+.toast{position:fixed;bottom:20px;left:20px;background:#1e293b;padding:12px 20px;border-radius:8px;opacity:0;transform:translateY(20px);transition:all .3s;z-index:9999;font-size:13px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-right:4px solid #22c55e}.toast.error{border-right:4px solid #ef4444}
+.clip-link{color:#3b82f6;text-decoration:none}
+.verify-btn{background:#8b5cf6;color:white;border:none;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer}
+.verify-result{font-size:10px;color:#a78bfa;max-width:120px;display:inline-block}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;justify-content:center;align-items:center}
+.modal.show{display:flex}
+.modal-box{background:#1e293b;border-radius:12px;padding:25px;width:90%;max-width:450px}
+.modal-box h2{margin-bottom:15px;color:#f8fafc;font-size:16px}
+.drop-zone{border:3px dashed #475569;border-radius:12px;padding:30px 15px;text-align:center;cursor:pointer;color:#94a3b8;font-size:13px}
+.drop-zone:hover,.drop-zone.dragover{border-color:#3b82f6;background:#1e3a8a;color:#e2e8f0}
+.drop-zone input{display:none}
+.progress-bar{width:100%;height:6px;background:#334155;border-radius:3px;overflow:hidden;margin:12px 0;display:none}
+.progress-bar.show{display:block}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);width:0%;transition:width .3s}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:15px}
+
+.guardian-eye{width:38px;height:38px;background:linear-gradient(135deg,#ef4444,#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(239,68,68,.3);position:relative}
+.eye-ball{width:24px;height:16px;background:#f8fafc;border-radius:50%;position:relative;overflow:hidden;box-shadow:inset 0 0 6px rgba(0,0,0,.35);animation:eyeBlink 4s infinite;display:flex;align-items:center;justify-content:center}
+.eye-pupil{width:9px;height:9px;background:radial-gradient(circle at 30% 30%,#475569,#0f172a);border-radius:50%;position:relative;animation:eyeScan 5s ease-in-out infinite;box-shadow:inset -1px -1px 2px rgba(0,0,0,.5)}
+.eye-pupil::after{content:'';position:absolute;width:3px;height:3px;background:#fff;border-radius:50%;top:1px;left:1px;opacity:.9}
+@keyframes eyeBlink{0%,44%,56%,100%{transform:scaleY(1)}48%,52%{transform:scaleY(.06)}}
+@keyframes eyeScan{0%,100%{transform:translateX(0)}15%{transform:translateX(6px)}35%{transform:translateX(-6px)}50%{transform:translateX(0)}65%{transform:translateX(6px)}85%{transform:translateX(-6px)}}
+
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👁️</text></svg>">
 </head>
 <body>
-    <div class="header">
-        <h1>👁️🛡️ Guardian Eye — عين الحارس</h1>
-        <div class="actions">
-            <input id="manualLoc" placeholder="36.7538,3.0588" title="الصق إحداثيات موقعك من Google Maps">
-            <button class="btn btn-success" onclick="setManualLocation()">📍 تعيين</button>
-            <button class="btn btn-primary" onclick="loadEvents()">🔄 تحديث</button>
-            <button class="btn btn-danger" onclick="clearAll()">🗑️ مسح الكل</button>
-            <a href="/stats" class="btn btn-primary" style="text-decoration:none;">📊 إحصائيات</a>
-<a href="/logout" class="btn btn-danger" style="text-decoration:none;">🚪 خروج</a>
-        </div>
-    </div>
-    <div class="stats">
-        <div class="stat-card alert"><div class="stat-label">إجمالي الأحداث</div><div class="stat-value" id="statTotal">-</div></div>
-        <div class="stat-card warning"><div class="stat-label">آخر 24 ساعة</div><div class="stat-value" id="statLast24">-</div></div>
-        <div class="stat-card success"><div class="stat-label">أشخاص فريدون</div><div class="stat-value" id="statTracks">-</div></div>
-        <div class="stat-card"><div class="stat-label">آخر حدث</div><div class="stat-value" id="statLast" style="font-size: 16px;">-</div></div>
-    </div>
-    <div class="main-content">
-        <div class="panel">
-            <div class="panel-header"><span>🗺️ الخريطة</span><span id="mapInfo" style="font-size: 12px; color: #94a3b8;">-</span></div>
-            <div id="map"></div>
-        </div>
-        <div class="panel">
-            <div class="panel-header"><span>📋 سجل الأحداث</span><span id="tableInfo" style="font-size: 12px; color: #94a3b8;">-</span></div>
-            <div class="table-container">
-                <table id="eventsTable">
-                    <thead><tr><th>#</th><th>الوقت</th><th>الشخص</th><th>GPS</th><th>المسافة</th><th>النوع</th><th>الدليل</th></tr></thead>
-                    <tbody id="eventsBody"><tr><td colspan="7" class="loading">جاري التحميل...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="toast" id="toast"></div>
-    <script>
-        let map, markersLayer, allEvents = [], userMarker = null;
+<div class="header"><div style="display:flex;align-items:center;gap:10px">
+<div class="guardian-eye" title="Guardian Eye is watching">
+<div class="eye-ball"><div class="eye-pupil"></div></div>
+</div>
+<div>
+<div style="font-size:16px;font-weight:800;letter-spacing:1px;color:#f8fafc">GUARDIAN EYE</div>
+<div style="font-size:10px;color:#94a3b8;letter-spacing:0.5px;margin-top:-2px">AI-POWERED RETAIL SECURITY</div>
+</div>
+</div>
+<div class="actions">
+<select id="langSwitcher" style="padding:7px 10px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:11px;cursor:pointer">
+<option value="ar">العربية</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+</select>
+<div class="volume-control" title="Volume">
+<button type="button" class="volume-btn" id="volDown" onclick="changeVolume(-10)">−</button>
+<div class="volume-bar"><div class="volume-fill" id="volumeFill"></div></div>
+<span class="volume-value" id="volumeValue">70%</span>
+<button type="button" class="volume-btn" id="volUp" onclick="changeVolume(10)">+</button>
+</div>
+<button class="btn btn-danger" id="testAlertBtn" onclick="triggerTestAlert()" title="Test Alert">🔔</button>
+<button class="btn btn-warning" id="uploadBtn" onclick="openUploadModal()">📹 <span data-i18n="upload">رفع فيديو</span></button>
+<a href="/api/reports/csv" class="btn btn-primary">📊 <span data-i18n="report">تقرير CSV</span></a>
+            <button class="btn btn-danger" onclick="downloadPDF()" id="pdfBtn">📄 <span data-i18n="pdf_report">تقرير PDF</span></button>
+<button class="btn btn-primary" id="refreshBtn" onclick="refreshData(event)">🔄 <span data-i18n="refresh">تحديث</span></button>
+<a href="/stats" class="btn btn-primary">📈 <span data-i18n="stats">إحصائيات</span></a>
+<button class="btn btn-danger" id="clearBtn" onclick="clearAll()">🗑️ <span data-i18n="clear">مسح</span></button>
+<a href="/logout" class="btn btn-danger">🚪 <span data-i18n="logout">خروج</span></a>
+</div></div>
+<div class="stats">
+<div class="stat-card alert"><div class="stat-label" data-i18n="total_events">إجمالي</div><div class="stat-value" id="statTotal">-</div></div>
+<div class="stat-card warning"><div class="stat-label" data-i18n="last_24h">آخر 24 ساعة</div><div class="stat-value" id="statLast24">-</div></div>
+<div class="stat-card success"><div class="stat-label" data-i18n="unique_tracks">أشخاص</div><div class="stat-value" id="statTracks">-</div></div>
+<div class="stat-card"><div class="stat-label" data-i18n="last_event">آخر حدث</div><div class="stat-value" id="statLast" style="font-size:13px">-</div></div>
+</div>
 
-        function initMap() {
-            map = L.map('map').setView([36.7538, 3.0588], 5);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap', maxZoom: 19
-            }).addTo(map);
-            markersLayer = L.layerGroup().addTo(map);
-            locateUser(true);
-        }
+<div class="main-content">
+<div class="panel">
+<div class="panel-header"><span>🗺️ <span data-i18n="map">الخريطة</span></span><span id="mapInfo" style="font-size:11px;color:#94a3b8">-</span></div>
+<div id="map"></div>
+</div>
+<div class="panel">
+<div class="panel-header"><span>📋 <span data-i18n="events_log">سجل الأحداث</span></span><span id="tableInfo" style="font-size:11px;color:#94a3b8">-</span></div>
+<div class="table-container">
+<table>
+<thead><tr><th data-i18n="id">#</th><th data-i18n="time">الوقت</th><th data-i18n="track">الشخص</th><th data-i18n="gps">GPS</th><th data-i18n="distance">المسافة</th><th data-i18n="type">النوع</th><th data-i18n="evidence">الدليل</th><th data-i18n="ai_check">تحقق AI</th></tr></thead>
+<tbody id="eventsBody"><tr><td colspan="8" class="empty">جاري التحميل...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
 
-        function locateUser(centerMap) {
-            if (!navigator.geolocation) return;
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    if (userMarker) map.removeLayer(userMarker);
-                    userMarker = L.circleMarker([lat, lon], {
-                        radius: 10, fillColor: '#3b82f6', color: '#fff', weight: 3, fillOpacity: 0.9
-                    }).addTo(map).bindPopup('<strong>📍 موقعك الحالي</strong>');
-                    if (centerMap) map.setView([lat, lon], 16);
-                },
-                () => {},
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
-        }
+<div id="uploadModal" class="modal">
+<div class="modal-box">
+<h2 data-i18n="upload_title">رفع فيديو للتحليل</h2>
+<div class="drop-zone" id="dropZone">
+<input type="file" id="fileInput" accept="video/*">
+<div style="font-size:36px;margin-bottom:8px">📁</div>
+<div data-i18n="upload_drop">اسحب وأفلت الفيديو أو انقر للاختيار</div>
+</div>
+<div id="fileName" style="margin-top:10px;color:#a78bfa;font-size:12px"></div>
+<div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="modal-actions">
+<button class="btn btn-danger" id="cancelUpload" data-i18n="upload_cancel">إلغاء</button>
+<button class="btn btn-success" id="startUploadBtn" disabled data-i18n="upload_start">بدء التحليل</button>
+</div>
+</div>
+</div>
 
-        function setManualLocation() {
-            const val = document.getElementById('manualLoc').value.trim();
-            const parts = val.split(',').map(x => parseFloat(x.trim()));
-            if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-                showToast('⚠️ صيغة خاطئة. استخدم: lat,lon', 'error');
-                return;
-            }
-            const [lat, lon] = parts;
-            if (userMarker) map.removeLayer(userMarker);
-            userMarker = L.circleMarker([lat, lon], {
-                radius: 10, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
-            }).addTo(map).bindPopup('<strong>📍 الموقع المعيّن</strong>').openPopup();
-            map.setView([lat, lon], 17);
-            localStorage.setItem('manualLocation', JSON.stringify({ lat, lon }));
-            showToast('✅ تم تعيين الموقع', 'success');
-        }
+<div class="toast" id="toast"></div>
 
-        window.addEventListener('load', () => {
-            const saved = localStorage.getItem('manualLocation');
-            if (saved) {
-                try {
-                    const { lat, lon } = JSON.parse(saved);
-                    document.getElementById('manualLoc').value = lat + ',' + lon;
-                } catch (e) {}
+<script>
+// ============ VOLUME ============
+var currentVolume = 70;
+function getVolume(){var s=localStorage.getItem('guardian_volume');if(s!==null)currentVolume=parseInt(s);return currentVolume;}
+function setVolume(v){v=Math.max(0,Math.min(100,v));currentVolume=v;localStorage.setItem('guardian_volume',String(v));var f=document.getElementById('volumeFill');var l=document.getElementById('volumeValue');if(f)f.style.width=v+'%';if(l)l.textContent=v+'%';}
+function changeVolume(d){var n=getVolume()+d;setVolume(n);if(n>0)playBeep(n/100);}
+function playBeep(vol){try{var c=new(window.AudioContext||window.webkitAudioContext)();var o=c.createOscillator();var g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(vol*0.3,c.currentTime);g.gain.exponentialRampToValueAtTime(0.01,c.currentTime+0.12);o.start();o.stop(c.currentTime+0.12);}catch(e){}}
+function playAlertSound(){try{var v=getVolume()/100;if(v===0)return;var c=new(window.AudioContext||window.webkitAudioContext)();[{f:784,t:0,d:0.15},{f:1047,t:0.18,d:0.15},{f:1319,t:0.36,d:0.3}].forEach(function(n){var o=c.createOscillator();var g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(n.f,c.currentTime+n.t);g.gain.setValueAtTime(0,c.currentTime+n.t);g.gain.linearRampToValueAtTime(v*0.4,c.currentTime+n.t+0.02);g.gain.exponentialRampToValueAtTime(0.01,c.currentTime+n.t+n.d);o.start(c.currentTime+n.t);o.stop(c.currentTime+n.t+n.d);});}catch(e){}}
+function showAlertNotification(e){playAlertSound();document.body.classList.add('flash-alert');setTimeout(function(){document.body.classList.remove('flash-alert');},1500);if(window.Notification&&Notification.permission==='granted'){try{new Notification('Alert',{body:'#'+e.id+' - '+(e.reason||'Suspicious'),tag:'alert-'+e.id});}catch(x){}}}
+function triggerTestAlert(){showAlertNotification({id:9999,reason:'TEST'});showToast('Test alert: '+getVolume()+'%','success');}
+function requestNotificationPermission(){if(!('Notification' in window))return;if(Notification.permission==='default'){try{Notification.requestPermission();}catch(e){}}}
+
+// ============ MAP ============
+var map,markersLayer,allEvents=[],selectedFile=null,lastKnownEventId=0;
+function initMap(){map=L.map('map').setView([36.7538,3.0588],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);markersLayer=L.layerGroup().addTo(map);}
+
+// ============ UI ============
+function showToast(m,t){var el=document.getElementById('toast');if(!el)return;el.textContent=m;el.className='toast '+(t||'success')+' show';setTimeout(function(){el.className='toast';},3500);}
+function formatDate(i){if(!i)return '-';try{return new Date(i).toLocaleString();}catch(e){return i;}}
+
+// ============ LOAD ============
+function loadEvents(){fetch('/api/events?limit=100000').then(function(r){return r.json();}).then(function(d){allEvents=d.events||[];if(allEvents.length>0){var n=allEvents[0];if(lastKnownEventId>0&&n.id>lastKnownEventId){var cnt=allEvents.filter(function(e){return e.id>lastKnownEventId;}).length;if(cnt>0){showAlertNotification(n);showToast('New: '+cnt,'error');}}lastKnownEventId=Math.max(lastKnownEventId,n.id);}var st=document.getElementById('statTotal');if(st)st.textContent=d.total;updateStats();renderTable();renderMap();}).catch(function(e){console.error(e);});}
+
+function updateStats(){var now=Date.now();var h=allEvents.filter(function(e){return e.created_at&&(now-new Date(e.created_at).getTime())<86400000;});var a=document.getElementById('statLast24');if(a)a.textContent=h.length;var b=document.getElementById('statTracks');if(b)b.textContent=new Set(allEvents.map(function(e){return e.track_id;})).size;var c2=document.getElementById('statLast');if(c2&&allEvents.length>0)c2.textContent=formatDate(allEvents[0].created_at);}
+
+// ============ TABLE (uses t() everywhere) ============
+function renderTable(){
+    var tb=document.getElementById('eventsBody');
+    if(!tb)return;
+    var inf=document.getElementById('tableInfo');
+    if(inf)inf.textContent=allEvents.length+' '+(typeof t==='function'?t('events_count'):'event');
+    if(allEvents.length===0){tb.innerHTML='<tr><td colspan="8" class="empty">'+(typeof t==='function'?t('no_events'):'No events')+'</td></tr>';return;}
+    tb.innerHTML=allEvents.map(function(e){
+        var lat=e.gps_latitude?e.gps_latitude.toFixed(5):'-';
+        var lon=e.gps_longitude?e.gps_longitude.toFixed(5):'-';
+        var dist=e.gps_distance_m?e.gps_distance_m.toFixed(1)+'m':'-';
+        var clip='<span style="color:#64748b">-</span>';
+        if(e.clip_path){var fn=e.clip_path.split(/[\\/]/).pop();clip='<a href="/clips/'+encodeURIComponent(fn)+'" target="_blank" class="clip-link" onclick="event.stopPropagation()">\uD83C\uDFAC '+(typeof t==='function'?t('watch'):'Watch')+'</a>';}
+        var ver;
+        if(e.qwen_verification){var raw=String(e.qwen_verification);var ft=raw.replace(/"/g,'&quot;');if(raw.indexOf('\u0645\u0634\u0628\u0648\u0647')!==-1){ver='<span class="badge badge-alert" title="'+ft+'">\uD83D\uDEA8 '+(typeof t==='function'?t('verdict_suspicious'):'Suspicious')+'</span>';}else if(raw.indexOf('\u0637\u0628\u064A\u0639\u064A')!==-1){ver='<span class="badge" style="background:#14532d;color:#bbf7d0" title="'+ft+'">\u2705 '+(typeof t==='function'?t('verdict_normal'):'Normal')+'</span>';}else{ver='<span class="verify-result" title="'+ft+'">\uD83E\uDD16 '+raw.slice(0,30)+'</span>';}}
+        else{ver='<button class="verify-btn" onclick="event.stopPropagation(); startVerify('+e.id+')" id="vbtn-'+e.id+'">\uD83E\uDD16 '+(typeof t==='function'?t('verify'):'Verify')+'</button>';}
+        return '<tr onclick="zoomTo('+e.id+')"><td>'+e.id+'</td><td>'+formatDate(e.created_at)+'</td><td><span class="badge badge-info">#'+e.track_id+'</span></td><td style="font-family:monospace;font-size:10px">'+lat+', '+lon+'</td><td>'+dist+'</td><td><span class="badge badge-alert">'+(e.reason||'-')+'</span></td><td>'+clip+'</td><td>'+ver+'</td></tr>';
+    }).join('');
+}
+
+// ============ MAP RENDER ============
+function renderMap(){if(!markersLayer)return;markersLayer.clearLayers();var v=allEvents.filter(function(e){return e.gps_latitude&&e.gps_longitude;});var inf=document.getElementById('mapInfo');if(v.length===0){if(inf)inf.textContent='-';return;}if(inf)inf.textContent=v.length+' pin';v.forEach(function(e){var col=(e.qwen_verification&&e.qwen_verification.indexOf('\u0645\u0634\u0628\u0648\u0647')>=0)?'#ef4444':'#f59e0b';var m=L.circleMarker([e.gps_latitude,e.gps_longitude],{radius:7,fillColor:col,color:'#fff',weight:2,fillOpacity:0.8});m.bindPopup('#'+e.id+' - Track '+e.track_id+'<br>'+(e.reason||''));m.eventId=e.id;markersLayer.addLayer(m);});try{map.fitBounds(L.latLngBounds(v.map(function(e){return[e.gps_latitude,e.gps_longitude];})),{padding:[30,30],maxZoom:17});}catch(x){}}
+
+function zoomTo(id){var e=allEvents.find(function(x){return x.id===id;});if(!e||!e.gps_latitude||!map)return;map.setView([e.gps_latitude,e.gps_longitude],18);markersLayer.eachLayer(function(m){if(m.eventId===id)m.openPopup();});}
+
+function clearAll(){if(!confirm('Clear all events?'))return;fetch('/api/events',{method:'DELETE'}).then(function(){lastKnownEventId=0;showToast('Cleared','success');loadEvents();});}
+
+function startVerify(id){var b=document.getElementById('vbtn-'+id);if(b){b.disabled=true;b.textContent='...';}fetch('/api/verify/'+id,{method:'POST'}).then(function(){var a=0;var iv=setInterval(function(){a++;fetch('/api/events/'+id).then(function(r){return r.json();}).then(function(e){if(e.qwen_verification){clearInterval(iv);loadEvents();}if(a>=60)clearInterval(iv);});},5000);});}
+
+// ============ UPLOAD ============
+function openUploadModal(){var m=document.getElementById('uploadModal');if(m)m.classList.add('show');requestNotificationPermission();}
+function closeUploadModal(){var m=document.getElementById('uploadModal');if(m)m.classList.remove('show');selectedFile=null;var f=document.getElementById('fileName');if(f)f.textContent='';var s=document.getElementById('startUploadBtn');if(s)s.disabled=true;var p=document.getElementById('progressBar');if(p)p.classList.remove('show');var pf=document.getElementById('progressFill');if(pf)pf.style.width='0%';}
+
+function handleFile(file){if(!file.type.startsWith('video/')){showToast('Select video','error');return;}selectedFile=file;var f=document.getElementById('fileName');if(f)f.textContent='Selected: '+file.name+' ('+(file.size/1024/1024).toFixed(2)+' MB)';var s=document.getElementById('startUploadBtn');if(s)s.disabled=false;}
+
+function startUpload(){if(!selectedFile)return;var b=document.getElementById('startUploadBtn');var bar=document.getElementById('progressBar');var fill=document.getElementById('progressFill');if(b)b.disabled=true;if(bar)bar.classList.add('show');if(fill)fill.style.width='20%';var fd=new FormData();fd.append('video',selectedFile);showToast('Processing...','success');fetch('/api/detect',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){if(fill)fill.style.width='100%';if(d.error){showToast('Failed: '+d.error,'error');}else{var cnt=(d.suspicious_events||[]).length;showToast('Done: '+cnt,'success');loadEvents();}setTimeout(closeUploadModal,1500);}).catch(function(e){showToast('Failed: '+e.message,'error');if(b)b.disabled=false;});}
+
+// ============ INIT ============
+
+// ============ Refresh with feedback ============
+function refreshData(ev) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    console.log('[Refresh] Button clicked at', new Date().toLocaleTimeString());
+
+    var btn = document.getElementById('refreshBtn');
+    var tbody = document.getElementById('eventsBody');
+    var origHTML = btn ? btn.innerHTML : '';
+
+    // 1. زر يتحول إلى تحميل
+    if (btn) { btn.disabled = true; btn.innerHTML = '\u23F3 ' + new Date().toLocaleTimeString(); }
+
+    // 2. إظهار "جاري التحديث" في الجدول
+    if (tbody && allEvents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">\u23F3 Refreshing...</td></tr>';
+    }
+
+    // 3. وميض أخضر خفيف على الجدول (تأكيد بصري)
+    if (tbody) {
+        tbody.style.transition = 'background 0.3s';
+        tbody.style.background = 'rgba(16, 185, 129, 0.15)';
+        setTimeout(function() { tbody.style.background = ''; }, 600);
+    }
+
+    if (typeof showToast === 'function') showToast('\uD83D\uDD04 Refreshing...', 'success');
+
+    // 4. تنفيذ التحديث
+    try { loadEvents(); } catch(e) { console.error('[Refresh] loadEvents error:', e); }
+
+    // 5. إعادة الزر وإظهار النتيجة بعد ثانيتين
+    setTimeout(function() {
+        if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+        var cnt = (typeof allEvents !== 'undefined') ? allEvents.length : 0;
+        if (typeof showToast === 'function') showToast('\u2705 Updated: ' + cnt + ' events', 'success');
+        console.log('[Refresh] Complete. Events:', cnt, '| Time:', new Date().toLocaleTimeString());
+    }, 2000);
+}
+
+
+// ============ PDF Download ============
+function downloadPDF() {
+    var btn = document.getElementById('pdfBtn');
+    var origHTML = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '\u23F3 ...'; }
+    if (typeof showToast === 'function') showToast('\uD83D\uDCC4 Generating PDF...', 'success');
+
+    var lang = (typeof CURRENT_LANG !== 'undefined') ? CURRENT_LANG : (localStorage.getItem('guardian_lang') || 'ar');
+    var url = '/api/reports/pdf?lang=' + encodeURIComponent(lang);
+
+    // استخدام fetch للكشف عن الأخطاء
+    fetch(url)
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.blob();
+        })
+        .then(function(blob) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'guardian_eye_report_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+            if (typeof showToast === 'function') showToast('\u2705 PDF downloaded', 'success');
+        })
+        .catch(function(e) {
+            console.error('PDF error:', e);
+            if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+            if (typeof showToast === 'function') showToast('\u274C PDF failed: ' + e.message, 'error');
+        });
+}
+
+
+document.addEventListener('DOMContentLoaded', function(){
+    console.log('=== Guardian Eye Init ===');
+
+    var ls = document.getElementById('langSwitcher');
+    if (ls) {
+        ls.value = (typeof CURRENT_LANG !== 'undefined' ? CURRENT_LANG : (localStorage.getItem('guardian_lang') || 'ar'));
+        ls.addEventListener('change', function(e) {
+            if (typeof applyLanguage === 'function') {
+                applyLanguage(e.target.value);
+                setTimeout(function(){ try { renderTable(); } catch(x){ console.warn('renderTable after lang:', x); } }, 50);
             }
         });
+    }
+    if (typeof initLanguage === 'function') { try { initLanguage(); } catch(e) { console.warn('initLanguage:', e); } }
 
-        function showToast(msg, type) {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.className = 'toast ' + (type || 'success') + ' show';
-            setTimeout(() => t.className = 'toast', 3000);
-        }
+    try { if (typeof L !== 'undefined') initMap(); else console.warn('Leaflet missing'); } catch(e) { console.error('initMap:', e); }
+    try { setVolume(getVolume()); } catch(e) {}
+    try { requestNotificationPermission(); } catch(e) {}
 
-        function formatDate(iso) {
-            if (!iso) return '-';
-            try { return new Date(iso).toLocaleString('ar-DZ', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-            catch { return iso; }
-        }
+    var bmap = {volUp:function(){changeVolume(10);}, volDown:function(){changeVolume(-10);}, testAlertBtn:triggerTestAlert,  clearBtn:clearAll, uploadBtn:openUploadModal, cancelUpload:closeUploadModal, startUploadBtn:startUpload};
+    Object.keys(bmap).forEach(function(id){ var el=document.getElementById(id); if(el)el.addEventListener('click',bmap[id]); });
 
-        async function loadEvents() {
-            try {
-                document.getElementById('eventsBody').innerHTML = '<tr><td colspan="7" class="loading">⏳ جاري التحميل...</td></tr>';
-                const resp = await fetch('/api/events?limit=200');
-                const data = await resp.json();
-                allEvents = data.events || [];
-                document.getElementById('statTotal').textContent = data.total;
-                updateStats(); renderTable(); renderMap();
-            } catch (e) { showToast('خطأ: ' + e.message, 'error'); }
-        }
+    try { var dz=document.getElementById('dropZone'); var fi=document.getElementById('fileInput'); if(dz&&fi){ dz.addEventListener('click',function(){fi.click();}); dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('dragover');}); dz.addEventListener('dragleave',function(){dz.classList.remove('dragover');}); dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files.length>0)handleFile(e.dataTransfer.files[0]);}); fi.addEventListener('change',function(e){if(e.target.files.length>0)handleFile(e.target.files[0]);}); } } catch(e){}
 
-        function updateStats() {
-            const now = Date.now();
-            const last24h = allEvents.filter(e => e.created_at && (now - new Date(e.created_at).getTime()) < 86400000);
-            document.getElementById('statLast24').textContent = last24h.length;
-            document.getElementById('statTracks').textContent = new Set(allEvents.map(e => e.track_id)).size;
-            if (allEvents.length > 0 && allEvents[0].created_at) {
-                document.getElementById('statLast').textContent = formatDate(allEvents[0].created_at);
-            }
-        }
+    console.log('Calling loadEvents...');
+    loadEvents();
+    setInterval(loadEvents, 15000);
+});
 
-        function renderTable() {
-            const tbody = document.getElementById('eventsBody');
-            document.getElementById('tableInfo').textContent = allEvents.length + ' حدث';
-            if (allEvents.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty">🎉 لا توجد أحداث</td></tr>'; return; }
-            tbody.innerHTML = allEvents.map(e => {
-                const lat = e.gps_latitude ? e.gps_latitude.toFixed(5) : '-';
-                const lon = e.gps_longitude ? e.gps_longitude.toFixed(5) : '-';
-                const dist = e.gps_distance_m ? e.gps_distance_m.toFixed(1) + 'م' : '-';
-                let clipBtn = '<span style="color:#64748b;">-</span>';
-                if (e.clip_path) {
-                    const fname = e.clip_path.split(/[\\/]/).pop();
-                    clipBtn = '<a href="/clips/' + encodeURIComponent(fname) + '" target="_blank" class="clip-link" onclick="event.stopPropagation()">▶️ مشاهدة</a>';
-                }
-                return '<tr onclick="zoomTo(' + e.id + ')">' +
-                    '<td>' + e.id + '</td>' +
-                    '<td>' + formatDate(e.created_at) + '</td>' +
-                    '<td><span class="badge badge-info">#' + e.track_id + '</span></td>' +
-                    '<td style="font-family: monospace; font-size: 11px;">' + lat + ', ' + lon + '</td>' +
-                    '<td>' + dist + '</td>' +
-                    '<td><span class="badge badge-alert">' + (e.reason || '-') + '</span></td>' +
-                    '<td>' + clipBtn + '</td>' +
-                    '</tr>';
-            }).join('');
-        }
-
-        function renderMap() {
-            markersLayer.clearLayers();
-            const valid = allEvents.filter(e => e.gps_latitude && e.gps_longitude);
-            if (valid.length === 0) { document.getElementById('mapInfo').textContent = 'لا توجد إحداثيات'; return; }
-            document.getElementById('mapInfo').textContent = valid.length + ' دبوس';
-            valid.forEach(e => {
-                const m = L.circleMarker([e.gps_latitude, e.gps_longitude], {
-                    radius: 8, fillColor: '#ef4444', color: '#fff', weight: 2, fillOpacity: 0.8
-                });
-                m.bindPopup('<strong>🚨 حدث #' + e.id + '</strong><br>🎯 شخص: #' + e.track_id + '<br>⚠️ ' + e.reason);
-                m.eventId = e.id;
-                markersLayer.addLayer(m);
-            });
-            map.fitBounds(L.latLngBounds(valid.map(e => [e.gps_latitude, e.gps_longitude])), { padding: [30, 30], maxZoom: 17 });
-        }
-
-        function zoomTo(id) {
-            const e = allEvents.find(x => x.id === id);
-            if (!e || !e.gps_latitude) return;
-            map.setView([e.gps_latitude, e.gps_longitude], 18);
-            markersLayer.eachLayer(m => { if (m.eventId === id) m.openPopup(); });
-            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function clearAll() {
-            if (!confirm('هل أنت متأكد من مسح كل الأحداث؟')) return;
-            try { await fetch('/api/events', { method: 'DELETE' }); showToast('تم المسح', 'success'); loadEvents(); }
-            catch (e) { showToast('خطأ: ' + e.message, 'error'); }
-        }
-
-        initMap();
-        loadEvents();
-        setInterval(loadEvents, 30000);
-    </script>
+</script>
 </body>
 </html>
