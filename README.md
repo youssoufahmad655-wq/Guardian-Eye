@@ -43,7 +43,7 @@
       <p align="center"><b>Statistics</b> — Hourly events, behavior types, top persons</p>
     </td>
     <td width="50%">
-      <img src="docs/screenshots/clips.png" alt="Video evidence clips">
+      
       <p align="center"><b>Video Evidence</b> — Auto-saved H.264 clips (3s before + 3s after)</p>
     </td>
   </tr>
