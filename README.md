@@ -4,6 +4,8 @@
 
 **Guardian Eye is a free, open-source shoplifting detection system that runs on a single 8GB computer. It detects loitering and concealment in real-time, sends GPS-tagged alerts, and works in Arabic, English, and French.**
 
+**[Guardian Eye](https://github.com/https://github.com/youssoufahmad655-wq/Guardian-Eye) - Open-source Arabic-first shoplifting detection system using YOLOv8 and Qwen for real-time retail security on a single device.**
+
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-red.svg)](https://github.com/ultralytics/ultralytics)
@@ -46,7 +48,8 @@
     </td>
   </tr>
 </table>
-
+    
+### Add Guardian Eye to the list
 ---
 
 
