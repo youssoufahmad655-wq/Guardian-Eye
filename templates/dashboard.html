@@ -328,30 +328,48 @@ async function subscribe() {
 
 // === Set Manual Location ===
 function setManualLocation() {
-    var val = document.getElementById('manualLoc').value.trim();
-    var parts = val.split(',').map(function(x) { return parseFloat(x.trim()); });
-    if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-        if (typeof showToast === 'function') showToast('صيغة خاطئة. استخدم: lat,lon', 'error');
-        else alert('صيغة خاطئة. استخدم: lat,lon');
+    var input = document.getElementById('manualLoc');
+    var val = input.value.trim();
+    if (!val) {
+        if (typeof showToast === 'function') showToast('⚠️ أدخل الإحداثيات أولاً. مثال: 36.7538,3.0588', 'error');
+        else alert('أدخل الإحداثيات أولاً. مثال: 36.7538,3.0588');
         return;
     }
-    var lat = parts[0], lon = parts[1];
+    // اقبل الفاصلة العربية (،) والإنجليزية (,) والمسافة
+    var normalized = val.replace(/[،\s]+/g, ',');
+    var parts = normalized.split(',').filter(function(x) { return x.trim() !== ''; });
+    if (parts.length !== 2) {
+        if (typeof showToast === 'function') showToast('⚠️ صيغة خاطئة. استخدم: lat,lon مثل 36.7538,3.0588', 'error');
+        else alert('صيغة خاطئة. استخدم: 36.7538,3.0588');
+        return;
+    }
+    var lat = parseFloat(parts[0].trim());
+    var lon = parseFloat(parts[1].trim());
+    if (isNaN(lat) || isNaN(lon)) {
+        if (typeof showToast === 'function') showToast('⚠️ أرقام غير صحيحة. تأكد من استخدام الأرقام الإنجليزية', 'error');
+        else alert('أرقام غير صحيحة');
+        return;
+    }
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        if (typeof showToast === 'function') showToast('⚠️ خط العرض يجب أن يكون -90 إلى 90، وخط الطول -180 إلى 180', 'error');
+        return;
+    }
 
-    // احفظ في localStorage
+    // احفظ
     localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
 
-    // ضع علامة زرقاء على الخريطة (إن كانت موجودة)
+    // ارسم على الخريطة
     if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
         if (typeof userMarker !== 'undefined' && userMarker) {
             map.removeLayer(userMarker);
         }
         window.userMarker = L.circleMarker([lat, lon], {
-            radius: 10, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
-        }).addTo(map).bindPopup('<b>📍 الموقع المعيّن</b><br>' + lat + ', ' + lon).openPopup();
+            radius: 12, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
+        }).addTo(map).bindPopup('<b>📍 موقعك</b><br>' + lat.toFixed(4) + ', ' + lon.toFixed(4)).openPopup();
         map.setView([lat, lon], 17);
     }
 
-    if (typeof showToast === 'function') showToast('✅ تم تعيين الموقع: ' + lat + ', ' + lon, 'success');
+    if (typeof showToast === 'function') showToast('✅ تم تعيين الموقع: ' + lat.toFixed(4) + ', ' + lon.toFixed(4), 'success');
 }
 
 // === تحميل الموقع المحفوظ عند فتح الصفحة ===
