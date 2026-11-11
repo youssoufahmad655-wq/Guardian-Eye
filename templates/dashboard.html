@@ -107,7 +107,9 @@ td{padding:7px 6px;color:#cbd5e1}
 <button class="btn btn-warning" id="uploadBtn" onclick="openUploadModal()">📹 <span data-i18n="upload">رفع فيديو</span></button>
 <a href="/api/reports/csv" class="btn btn-primary">📊 <span data-i18n="report">تقرير CSV</span></a>
             <button class="btn btn-danger" onclick="downloadPDF()" id="pdfBtn">📄 <span data-i18n="pdf_report">تقرير PDF</span></button>
-<button class="btn btn-primary" id="refreshBtn" onclick="refreshData(event)">🔄 <span data-i18n="refresh">تحديث</span></button>
+<input id="manualLoc" placeholder="36.7538,3.0588" title="الصق إحداثيات موقعك من Google Maps" style="padding:7px 10px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-family:monospace;width:140px;font-size:11px">
+            <button class="btn btn-success" onclick="setManualLocation()" id="setLocBtn" title="تعيين موقع الكاميرا">📍</button>
+            <button class="btn btn-primary" id="refreshBtn" onclick="refreshData(event)">🔄 <span data-i18n="refresh">تحديث</span></button>
 <a href="/stats" class="btn btn-primary">📈 <span data-i18n="stats">إحصائيات</span></a>
 <button class="btn btn-danger" id="clearBtn" onclick="clearAll()">🗑️ <span data-i18n="clear">مسح</span></button>
 <a href="/logout" class="btn btn-danger">🚪 <span data-i18n="logout">خروج</span></a>
@@ -322,6 +324,53 @@ async function subscribe() {
         if (typeof showToast === 'function') showToast('Failed: ' + e.message, 'error');
     }
 }
+
+
+// === Set Manual Location ===
+function setManualLocation() {
+    var val = document.getElementById('manualLoc').value.trim();
+    var parts = val.split(',').map(function(x) { return parseFloat(x.trim()); });
+    if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+        if (typeof showToast === 'function') showToast('صيغة خاطئة. استخدم: lat,lon', 'error');
+        else alert('صيغة خاطئة. استخدم: lat,lon');
+        return;
+    }
+    var lat = parts[0], lon = parts[1];
+
+    // احفظ في localStorage
+    localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
+
+    // ضع علامة زرقاء على الخريطة (إن كانت موجودة)
+    if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
+        if (typeof userMarker !== 'undefined' && userMarker) {
+            map.removeLayer(userMarker);
+        }
+        window.userMarker = L.circleMarker([lat, lon], {
+            radius: 10, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
+        }).addTo(map).bindPopup('<b>📍 الموقع المعيّن</b><br>' + lat + ', ' + lon).openPopup();
+        map.setView([lat, lon], 17);
+    }
+
+    if (typeof showToast === 'function') showToast('✅ تم تعيين الموقع: ' + lat + ', ' + lon, 'success');
+}
+
+// === تحميل الموقع المحفوظ عند فتح الصفحة ===
+window.addEventListener('load', function() {
+    var saved = localStorage.getItem('manualLocation');
+    if (saved) {
+        try {
+            var loc = JSON.parse(saved);
+            var inp = document.getElementById('manualLoc');
+            if (inp) inp.value = loc.lat + ',' + loc.lon;
+            if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
+                window.userMarker = L.circleMarker([loc.lat, loc.lon], {
+                    radius: 10, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
+                }).addTo(map).bindPopup('<b>📍 الموقع المعيّن</b>');
+                map.setView([loc.lat, loc.lon], 16);
+            }
+        } catch (e) {}
+    }
+});
 
 document.addEventListener('DOMContentLoaded', function(){
     console.log('=== Guardian Eye Init ===');
