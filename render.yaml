@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn -c gunicorn_config.py app_render:app
     envVars:
       - key: LIGHTWEIGHT_MODE
         value: "true"
