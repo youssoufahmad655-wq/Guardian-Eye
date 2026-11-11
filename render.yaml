@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: guardian-eye-demo
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: LIGHTWEIGHT_MODE
+        value: "true"
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+      - key: APP_SECRET_KEY
+        generateValue: true

@@ -12,7 +12,22 @@ from functools import wraps
 from datetime import datetime
 from collections import Counter
 
-from shoplifting_detector import ShopliftingDetector
+import os
+LIGHTWEIGHT_MODE = os.environ.get('LIGHTWEIGHT_MODE', 'false').lower() == 'true'
+
+if LIGHTWEIGHT_MODE:
+    print("[INFO] LIGHTWEIGHT MODE: AI models disabled for demo")
+    class ShopliftingDetector:
+        def __init__(self, *args, **kwargs):
+            self.total_detections = 0
+            self.suspicious_activities = 0
+            self.model_version = "lightweight-demo"
+        def process_video(self, *args, **kwargs):
+            return {"error": "AI disabled in demo mode", "suspicious_events": []}
+        def reset(self):
+            pass
+else:
+    from shoplifting_detector import ShopliftingDetector
 from database import EventDatabase
 from notifier import TelegramNotifier, BOT_TOKEN, CHAT_ID
 from auth import init_oauth, oauth
@@ -53,7 +68,7 @@ MODEL_FOLDER = 'models'
 for folder in [UPLOAD_FOLDER, TRAINING_FOLDER, MODEL_FOLDER]:
     os.makedirs(folder, exist_ok=True)
 
-detector = ShopliftingDetector()
+
 db = EventDatabase("events.db")
 notifier = TelegramNotifier(BOT_TOKEN, CHAT_ID, enabled=True)
 
@@ -408,4 +423,5 @@ def payment_failure():
 </body></html>"""
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
