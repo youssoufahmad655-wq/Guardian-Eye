@@ -443,6 +443,7 @@ function setManualLocation() {
 }
 
 function applyLocation(lat, lon) {
+    window.__allowMapMove = true;
     try {
         localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
         console.log('[applyLocation] Saved:', lat, lon);
@@ -457,6 +458,8 @@ function applyLocation(lat, lon) {
         map.setView([lat, lon], 17);
     }
     if (typeof showToast === 'function') showToast('\u2705 \u062a\u0645 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u0645\u0648\u0642\u0639: ' + lat.toFixed(6) + ', ' + lon.toFixed(6), 'success');
+
+    setTimeout(function() { window.__allowMapMove = false; }, 500);
 }
 
 
@@ -518,6 +521,7 @@ window.addEventListener('load', function() {
 
 // === \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 GPS \u0627\u0644\u0645\u062a\u0635\u0641\u062d ===
 function resetToGps() {
+    window.__allowMapMove = true;
     window.__allowGps = true;
     localStorage.removeItem('manualLocation');
     var inp = document.getElementById('manualLoc');
@@ -544,6 +548,8 @@ function resetToGps() {
             { enableHighAccuracy: true, timeout: 10000 }
         );
     }
+
+    setTimeout(function() { window.__allowMapMove = false; }, 2000);
 }
 
 document.addEventListener('DOMContentLoaded', function(){
@@ -587,6 +593,57 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 }, 15000);
 });
+
+
+// === MAP_OVERRIDE_ACTIVE: Block map movement if manual location is set ===
+window.__allowMapMove = false;
+(function() {
+    function installMapOverride() {
+        if (typeof map === 'undefined' || !map) {
+            setTimeout(installMapOverride, 200);
+            return;
+        }
+        if (map.__overrideInstalled) return;
+        map.__overrideInstalled = true;
+
+        var origFitBounds = map.fitBounds.bind(map);
+        var origSetView = map.setView.bind(map);
+        var origPanTo = map.panTo.bind(map);
+
+        map.fitBounds = function() {
+            if (!window.__allowMapMove && localStorage.getItem('manualLocation')) {
+                console.log('[MAP] fitBounds BLOCKED (manual active)');
+                return map;
+            }
+            return origFitBounds.apply(map, arguments);
+        };
+
+        map.setView = function() {
+            if (!window.__allowMapMove && localStorage.getItem('manualLocation')) {
+                console.log('[MAP] setView BLOCKED (manual active)');
+                return map;
+            }
+            return origSetView.apply(map, arguments);
+        };
+
+        map.panTo = function() {
+            if (!window.__allowMapMove && localStorage.getItem('manualLocation')) {
+                console.log('[MAP] panTo BLOCKED (manual active)');
+                return map;
+            }
+            return origPanTo.apply(map, arguments);
+        };
+
+        console.log('[MAP] Override installed - manual location protection active');
+    }
+
+    // انتظر حتى تُنشأ الخريطة
+    if (document.readyState === 'complete') {
+        setTimeout(installMapOverride, 500);
+    } else {
+        window.addEventListener('load', function() { setTimeout(installMapOverride, 500); });
+    }
+})();
 
 </script>
 </body>
