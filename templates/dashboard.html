@@ -103,7 +103,9 @@ td{padding:7px 6px;color:#cbd5e1}
 <span class="volume-value" id="volumeValue">70%</span>
 <button type="button" class="volume-btn" id="volUp" onclick="changeVolume(10)">+</button>
 </div>
-<button class="btn btn-danger" id="testAlertBtn" onclick="triggerTestAlert()" title="Test Alert">🔔</button>
+<input id="manualLoc" placeholder="36.7538,3.0588" title="إحداثيات الموقع" style="padding:7px 10px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-family:monospace;width:140px;font-size:11px">
+            <button class="btn btn-success" onclick="setManualLocation()" id="setLocBtn" title="تعيين موقع الكاميرا">📍</button>
+            <button class="btn btn-danger" id="testAlertBtn" onclick="triggerTestAlert()" title="Test Alert">🔔</button>
 <button class="btn btn-warning" id="uploadBtn" onclick="openUploadModal()">📹 <span data-i18n="upload">رفع فيديو</span></button>
 <a href="/api/reports/csv" class="btn btn-primary">📊 <span data-i18n="report">تقرير CSV</span></a>
             <button class="btn btn-danger" onclick="downloadPDF()" id="pdfBtn">📄 <span data-i18n="pdf_report">تقرير PDF</span></button>
@@ -321,6 +323,72 @@ async function subscribe() {
         if (btn) { btn.disabled = false; btn.innerHTML = orig; }
         if (typeof showToast === 'function') showToast('Failed: ' + e.message, 'error');
     }
+}
+
+
+function setManualLocation() {
+    var input = document.getElementById('manualLoc');
+    var val = input.value.trim();
+    if (!val) {
+        if (typeof showToast === 'function') showToast('أدخل الإحداثيات أولاً', 'error');
+        return;
+    }
+    var lat = null, lon = null;
+
+    // DMS format
+    var dmsRegex = /(\d+)\s*°\s*(\d+)\s*['\u2032]\s*([\d.]+)\s*["\u2033]?\s*([NSEW])/gi;
+    var matches = [];
+    var m;
+    while ((m = dmsRegex.exec(val)) !== null) matches.push(m);
+    if (matches.length >= 2) {
+        var coords = [];
+        for (var i = 0; i < 2; i++) {
+            var deg = parseFloat(matches[i][1]);
+            var min = parseFloat(matches[i][2]);
+            var sec = parseFloat(matches[i][3]);
+            var dir = matches[i][4].toUpperCase();
+            var dec = deg + min / 60 + sec / 3600;
+            if (dir === 'S' || dir === 'W') dec = -dec;
+            coords.push(dec);
+        }
+        for (var j = 0; j < 2; j++) {
+            var d = matches[j][4].toUpperCase();
+            if (d === 'N' || d === 'S') lat = coords[j];
+            if (d === 'E' || d === 'W') lon = coords[j];
+        }
+        if (lat === null || lon === null) { lat = coords[0]; lon = coords[1]; }
+    }
+
+    // Decimal format
+    if (lat === null || lon === null) {
+        var parts = val.replace(/[\u060C\s]+/g, ',').split(',').filter(function(x) { return x.trim() !== ''; });
+        if (parts.length === 2) {
+            var a = parseFloat(parts[0].trim());
+            var b = parseFloat(parts[1].trim());
+            if (!isNaN(a) && !isNaN(b)) { lat = a; lon = b; }
+        }
+    }
+
+    // Validate
+    if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
+        if (typeof showToast === 'function') showToast('صيغة خاطئة. استخدم 34.963972,-1.496417', 'error');
+        return;
+    }
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        if (typeof showToast === 'function') showToast('القيم خارج النطاق', 'error');
+        return;
+    }
+
+    // Save and apply
+    localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
+    if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
+        if (typeof userMarker !== 'undefined' && userMarker) { map.removeLayer(userMarker); }
+        window.userMarker = L.circleMarker([lat, lon], {
+            radius: 12, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
+        }).addTo(map).bindPopup('<b>الموقع</b><br>' + lat.toFixed(6) + ', ' + lon.toFixed(6)).openPopup();
+        map.setView([lat, lon], 17);
+    }
+    if (typeof showToast === 'function') showToast('تم: ' + lat.toFixed(6) + ', ' + lon.toFixed(6), 'success');
 }
 
 document.addEventListener('DOMContentLoaded', function(){
