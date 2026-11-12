@@ -399,7 +399,10 @@ function setManualLocation() {
 }
 
 function applyLocation(lat, lon) {
-    localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
+    try {
+        localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
+        console.log('[applyLocation] Saved:', lat, lon);
+    } catch(e) { console.error('[applyLocation] Save failed:', e); }
     if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
         if (typeof userMarker !== 'undefined' && userMarker) {
             map.removeLayer(userMarker);
@@ -476,9 +479,26 @@ function resetToGps() {
     if (inp) inp.value = '';
     if (typeof userMarker !== 'undefined' && userMarker && typeof map !== 'undefined' && map) {
         map.removeLayer(userMarker);
+        window.userMarker = null;
     }
     if (typeof showToast === 'function') showToast('\ud83d\uddfa\ufe0f \u062c\u0627\u0631\u064a \u062a\u062d\u062f\u064a\u062f \u0645\u0648\u0642\u0639\u0643...', 'success');
-    if (typeof locateUser === 'function') locateUser(true);
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
+                window.userMarker = L.circleMarker([lat, lon], {
+                    radius: 10, fillColor: '#3b82f6', color: '#fff', weight: 3, fillOpacity: 0.9
+                }).addTo(map).bindPopup('\ud83d\udccd \u0645\u0648\u0642\u0639\u0643 \u0627\u0644\u062d\u0627\u0644\u064a').openPopup();
+                map.setView([lat, lon], 16);
+                if (typeof showToast === 'function') showToast('\u2705 \u062a\u0645 \u062a\u062d\u062f\u064a\u062f \u0645\u0648\u0642\u0639\u0643', 'success');
+            },
+            function(err) {
+                if (typeof showToast === 'function') showToast('\u274c \u062a\u0639\u0630\u0631 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0645\u0648\u0642\u0639', 'error');
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function(){
