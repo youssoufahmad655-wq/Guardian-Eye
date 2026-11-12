@@ -107,10 +107,7 @@ td{padding:7px 6px;color:#cbd5e1}
 <button class="btn btn-warning" id="uploadBtn" onclick="openUploadModal()">📹 <span data-i18n="upload">رفع فيديو</span></button>
 <a href="/api/reports/csv" class="btn btn-primary">📊 <span data-i18n="report">تقرير CSV</span></a>
             <button class="btn btn-danger" onclick="downloadPDF()" id="pdfBtn">📄 <span data-i18n="pdf_report">تقرير PDF</span></button>
-<input id="manualLoc" placeholder="36.7538,3.0588" title="الصق إحداثيات موقعك من Google Maps" style="padding:7px 10px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-family:monospace;width:140px;font-size:11px">
-            <button class="btn btn-success" onclick="setManualLocation()" id="setLocBtn" title="تعيين موقع الكاميرا">📍</button>
-            <button class="btn btn-primary" onclick="resetToGps()" id="resetToGpsBtn" title="العودة إلى GPS المتصفح">🗺️</button>
-            <button class="btn btn-primary" id="refreshBtn" onclick="refreshData(event)">🔄 <span data-i18n="refresh">تحديث</span></button>
+<button class="btn btn-primary" id="refreshBtn" onclick="refreshData(event)">🔄 <span data-i18n="refresh">تحديث</span></button>
 <a href="/stats" class="btn btn-primary">📈 <span data-i18n="stats">إحصائيات</span></a>
 <button class="btn btn-danger" id="clearBtn" onclick="clearAll()">🗑️ <span data-i18n="clear">مسح</span></button>
 <a href="/logout" class="btn btn-danger">🚪 <span data-i18n="logout">خروج</span></a>
@@ -182,36 +179,35 @@ function requestNotificationPermission(){if(!('Notification' in window))return;i
 
 // ============ MAP ============
 var map,markersLayer,allEvents=[],selectedFile=null,lastKnownEventId=0;
-function initMap() {
-    map = L.map('map').setView([36.7538, 3.0588], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '\u00a9 OpenStreetMap', maxZoom: 19
-    }).addTo(map);
-    markersLayer = L.layerGroup().addTo(map);
+function initMap(){map=L.map('map').setView([36.7538,3.0588],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);markersLayer=L.layerGroup().addTo(map);}
 
-    // === \u0623\u0648\u0644\u0648\u064a\u0629 1: \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u064a\u062f\u0648\u064a \u0627\u0644\u0645\u062d\u0641\u0648\u0638 ===
-    var saved = localStorage.getItem('manualLocation');
-    if (saved) {
-        try {
-            var loc = JSON.parse(saved);
-            if (loc && typeof loc.lat === 'number' && typeof loc.lon === 'number') {
-                // \u0627\u0639\u0631\u0636 \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062d\u0641\u0648\u0638
-                window.userMarker = L.circleMarker([loc.lat, loc.lon], {
-                    radius: 12, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
-                }).addTo(map).bindPopup('<b>\ud83d\udccd \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u0639\u064a\u0651\u0646</b><br>' + loc.lat.toFixed(6) + ', ' + loc.lon.toFixed(6));
-                map.setView([loc.lat, loc.lon], 16);
-                var inp = document.getElementById('manualLoc');
-                if (inp) inp.value = loc.lat + ',' + loc.lon;
-                console.log('[Map] Using saved manual location:', loc);
-                return;  // \u0644\u0627 \u062a\u0633\u062a\u062f\u0639 locateUser
-            }
-        } catch(e) { console.warn('[Map] Invalid saved location:', e); }
-    }
+// ============ UI ============
+function showToast(m,t){var el=document.getElementById('toast');if(!el)return;el.textContent=m;el.className='toast '+(t||'success')+' show';setTimeout(function(){el.className='toast';},3500);}
+function formatDate(i){if(!i)return '-';try{return new Date(i).toLocaleString();}catch(e){return i;}}
 
-    // === \u0623\u0648\u0644\u0648\u064a\u0629 2: GPS \u0627\u0644\u0645\u062a\u0635\u0641\u062d (\u0641\u0642\u0637 \u0625\u0630\u0627 \u0644\u0645 \u064a\u0648\u062c\u062f \u0645\u0648\u0642\u0639 \u0645\u062d\u0641\u0648\u0638) ===
-    if (typeof locateUser === 'function') {
-        locateUser(true);
-    }
+// ============ LOAD ============
+function loadEvents(){fetch('/api/events?limit=100000').then(function(r){return r.json();}).then(function(d){allEvents=d.events||[];if(allEvents.length>0){var n=allEvents[0];if(lastKnownEventId>0&&n.id>lastKnownEventId){var cnt=allEvents.filter(function(e){return e.id>lastKnownEventId;}).length;if(cnt>0){showAlertNotification(n);showToast('New: '+cnt,'error');}}lastKnownEventId=Math.max(lastKnownEventId,n.id);}var st=document.getElementById('statTotal');if(st)st.textContent=d.total;updateStats();renderTable();renderMap();}).catch(function(e){console.error(e);});}
+
+function updateStats(){var now=Date.now();var h=allEvents.filter(function(e){return e.created_at&&(now-new Date(e.created_at).getTime())<86400000;});var a=document.getElementById('statLast24');if(a)a.textContent=h.length;var b=document.getElementById('statTracks');if(b)b.textContent=new Set(allEvents.map(function(e){return e.track_id;})).size;var c2=document.getElementById('statLast');if(c2&&allEvents.length>0)c2.textContent=formatDate(allEvents[0].created_at);}
+
+// ============ TABLE (uses t() everywhere) ============
+function renderTable(){
+    var tb=document.getElementById('eventsBody');
+    if(!tb)return;
+    var inf=document.getElementById('tableInfo');
+    if(inf)inf.textContent=allEvents.length+' '+(typeof t==='function'?t('events_count'):'event');
+    if(allEvents.length===0){tb.innerHTML='<tr><td colspan="8" class="empty">'+(typeof t==='function'?t('no_events'):'No events')+'</td></tr>';return;}
+    tb.innerHTML=allEvents.map(function(e){
+        var lat=e.gps_latitude?e.gps_latitude.toFixed(5):'-';
+        var lon=e.gps_longitude?e.gps_longitude.toFixed(5):'-';
+        var dist=e.gps_distance_m?e.gps_distance_m.toFixed(1)+'m':'-';
+        var clip='<span style="color:#64748b">-</span>';
+        if(e.clip_path){var fn=e.clip_path.split(/[\\/]/).pop();clip='<a href="/clips/'+encodeURIComponent(fn)+'" target="_blank" class="clip-link" onclick="event.stopPropagation()">\uD83C\uDFAC '+(typeof t==='function'?t('watch'):'Watch')+'</a>';}
+        var ver;
+        if(e.qwen_verification){var raw=String(e.qwen_verification);var ft=raw.replace(/"/g,'&quot;');if(raw.indexOf('\u0645\u0634\u0628\u0648\u0647')!==-1){ver='<span class="badge badge-alert" title="'+ft+'">\uD83D\uDEA8 '+(typeof t==='function'?t('verdict_suspicious'):'Suspicious')+'</span>';}else if(raw.indexOf('\u0637\u0628\u064A\u0639\u064A')!==-1){ver='<span class="badge" style="background:#14532d;color:#bbf7d0" title="'+ft+'">\u2705 '+(typeof t==='function'?t('verdict_normal'):'Normal')+'</span>';}else{ver='<span class="verify-result" title="'+ft+'">\uD83E\uDD16 '+raw.slice(0,30)+'</span>';}}
+        else{ver='<button class="verify-btn" onclick="event.stopPropagation(); startVerify('+e.id+')" id="vbtn-'+e.id+'">\uD83E\uDD16 '+(typeof t==='function'?t('verify'):'Verify')+'</button>';}
+        return '<tr onclick="zoomTo('+e.id+')"><td>'+e.id+'</td><td>'+formatDate(e.created_at)+'</td><td><span class="badge badge-info">#'+e.track_id+'</span></td><td style="font-family:monospace;font-size:10px">'+lat+', '+lon+'</td><td>'+dist+'</td><td><span class="badge badge-alert">'+(e.reason||'-')+'</span></td><td>'+clip+'</td><td>'+ver+'</td></tr>';
+    }).join('');
 }
 
 // ============ MAP RENDER ============
@@ -324,180 +320,6 @@ async function subscribe() {
     } catch (e) {
         if (btn) { btn.disabled = false; btn.innerHTML = orig; }
         if (typeof showToast === 'function') showToast('Failed: ' + e.message, 'error');
-    }
-}
-
-
-// === Set Manual Location ===
-function setManualLocation() {
-    var input = document.getElementById('manualLoc');
-    var val = input.value.trim();
-    if (!val) {
-        if (typeof showToast === 'function') showToast('ادخل الإحداثيات أولاً', 'error');
-        return;
-    }
-
-    var lat = null, lon = null;
-
-    // === محاولة 1: DMS Format ===
-    // يدعم: 34°57'50.3"N 1°29'47.1"W  أو  34° 57' 50.3" N  1° 29' 47.1" W
-    var dmsRegex = /(\d+)\s*°\s*(\d+)\s*['′]\s*([\d.]+)\s*["″]?\s*([NSEW])/gi;
-    var matches = [];
-    var m;
-    while ((m = dmsRegex.exec(val)) !== null) {
-        matches.push(m);
-    }
-
-    if (matches.length >= 2) {
-        var coords = [];
-        for (var i = 0; i < 2; i++) {
-            var deg = parseFloat(matches[i][1]);
-            var min = parseFloat(matches[i][2]);
-            var sec = parseFloat(matches[i][3]);
-            var dir = matches[i][4].toUpperCase();
-            var dec = deg + min / 60 + sec / 3600;
-            if (dir === 'S' || dir === 'W') dec = -dec;
-            coords.push(dec);
-        }
-        // الترتيب: N/S أولاً (lat), ثم E/W (lon)
-        for (var j = 0; j < 2; j++) {
-            var d = matches[j][4].toUpperCase();
-            if (d === 'N' || d === 'S') lat = coords[j];
-            if (d === 'E' || d === 'W') lon = coords[j];
-        }
-        if (lat === null || lon === null) {
-            lat = coords[0]; lon = coords[1];
-        }
-    }
-
-    // === محاولة 2: Decimal Format ===
-    if (lat === null || lon === null) {
-        var normalized = val.replace(/[،\s]+/g, ',');
-        var parts = normalized.split(',').filter(function(x) { return x.trim() !== ''; });
-        if (parts.length === 2) {
-            var a = parseFloat(parts[0].trim());
-            var b = parseFloat(parts[1].trim());
-            if (!isNaN(a) && !isNaN(b)) {
-                lat = a; lon = b;
-            }
-        }
-    }
-
-    // === التحقق ===
-    if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
-        if (typeof showToast === 'function') showToast('صيغة خاطئة. استخدم DMS مثل 34°57\'50.3"N 1°29\'47.1"W أو 34.963972,-1.496417', 'error');
-        return;
-    }
-    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        if (typeof showToast === 'function') showToast('القيم خارج النطاق: خط العرض -90 إلى 90، خط الطول -180 إلى 180', 'error');
-        return;
-    }
-
-    // === الحفظ والتطبيق ===
-    localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
-    applyLocation(lat, lon);
-}
-
-function applyLocation(lat, lon) {
-    try {
-        localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
-        console.log('[applyLocation] Saved:', lat, lon);
-    } catch(e) { console.error('[applyLocation] Save failed:', e); }
-    if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
-        if (typeof userMarker !== 'undefined' && userMarker) {
-            map.removeLayer(userMarker);
-        }
-        window.userMarker = L.circleMarker([lat, lon], {
-            radius: 12, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
-        }).addTo(map).bindPopup('<b>\ud83d\udccd \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u0639\u064a\u0651\u0646</b><br>' + lat.toFixed(6) + ', ' + lon.toFixed(6)).openPopup();
-        map.setView([lat, lon], 17);
-    }
-    if (typeof showToast === 'function') showToast('\u2705 \u062a\u0645 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u0645\u0648\u0642\u0639: ' + lat.toFixed(6) + ', ' + lon.toFixed(6), 'success');
-}
-
-
-    // اقبل الفاصلة العربية (،) والإنجليزية (,) والمسافة
-    var normalized = val.replace(/[،\s]+/g, ',');
-    var parts = normalized.split(',').filter(function(x) { return x.trim() !== ''; });
-    if (parts.length !== 2) {
-        if (typeof showToast === 'function') showToast('⚠️ صيغة خاطئة. استخدم: lat,lon مثل 36.7538,3.0588', 'error');
-        else alert('صيغة خاطئة. استخدم: 36.7538,3.0588');
-        return;
-    }
-    var lat = parseFloat(parts[0].trim());
-    var lon = parseFloat(parts[1].trim());
-    if (isNaN(lat) || isNaN(lon)) {
-        if (typeof showToast === 'function') showToast('⚠️ أرقام غير صحيحة. تأكد من استخدام الأرقام الإنجليزية', 'error');
-        else alert('أرقام غير صحيحة');
-        return;
-    }
-    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        if (typeof showToast === 'function') showToast('⚠️ خط العرض يجب أن يكون -90 إلى 90، وخط الطول -180 إلى 180', 'error');
-        return;
-    }
-
-    // احفظ
-    localStorage.setItem('manualLocation', JSON.stringify({ lat: lat, lon: lon }));
-
-    // ارسم على الخريطة
-    if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
-        if (typeof userMarker !== 'undefined' && userMarker) {
-            map.removeLayer(userMarker);
-        }
-        window.userMarker = L.circleMarker([lat, lon], {
-            radius: 12, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
-        }).addTo(map).bindPopup('<b>📍 موقعك</b><br>' + lat.toFixed(4) + ', ' + lon.toFixed(4)).openPopup();
-        map.setView([lat, lon], 17);
-    }
-
-    if (typeof showToast === 'function') showToast('✅ تم تعيين الموقع: ' + lat.toFixed(4) + ', ' + lon.toFixed(4), 'success');
-}
-
-// === تحميل الموقع المحفوظ عند فتح الصفحة ===
-window.addEventListener('load', function() {
-    var saved = localStorage.getItem('manualLocation');
-    if (saved) {
-        try {
-            var loc = JSON.parse(saved);
-            var inp = document.getElementById('manualLoc');
-            if (inp) inp.value = loc.lat + ',' + loc.lon;
-            if (typeof map !== 'undefined' && map && typeof L !== 'undefined') {
-                window.userMarker = L.circleMarker([loc.lat, loc.lon], {
-                    radius: 10, fillColor: '#10b981', color: '#fff', weight: 3, fillOpacity: 0.9
-                }).addTo(map).bindPopup('<b>📍 الموقع المعيّن</b>');
-                map.setView([loc.lat, loc.lon], 16);
-            }
-        } catch (e) {}
-    }
-});
-
-
-// === \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 GPS \u0627\u0644\u0645\u062a\u0635\u0641\u062d ===
-function resetToGps() {
-    localStorage.removeItem('manualLocation');
-    var inp = document.getElementById('manualLoc');
-    if (inp) inp.value = '';
-    if (typeof userMarker !== 'undefined' && userMarker && typeof map !== 'undefined' && map) {
-        map.removeLayer(userMarker);
-        window.userMarker = null;
-    }
-    if (typeof showToast === 'function') showToast('\ud83d\uddfa\ufe0f \u062c\u0627\u0631\u064a \u062a\u062d\u062f\u064a\u062f \u0645\u0648\u0642\u0639\u0643...', 'success');
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                var lat = position.coords.latitude;
-                var lon = position.coords.longitude;
-                window.userMarker = L.circleMarker([lat, lon], {
-                    radius: 10, fillColor: '#3b82f6', color: '#fff', weight: 3, fillOpacity: 0.9
-                }).addTo(map).bindPopup('\ud83d\udccd \u0645\u0648\u0642\u0639\u0643 \u0627\u0644\u062d\u0627\u0644\u064a').openPopup();
-                map.setView([lat, lon], 16);
-                if (typeof showToast === 'function') showToast('\u2705 \u062a\u0645 \u062a\u062d\u062f\u064a\u062f \u0645\u0648\u0642\u0639\u0643', 'success');
-            },
-            function(err) {
-                if (typeof showToast === 'function') showToast('\u274c \u062a\u0639\u0630\u0631 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0645\u0648\u0642\u0639', 'error');
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
     }
 }
 
