@@ -404,23 +404,95 @@ def create_subscription():
 @app.route('/payment/success')
 def payment_success():
     return """<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Payment Success</title></head>
-<body style="font-family:sans-serif;text-align:center;padding:60px;background:#0f172a;color:#fff">
-<h1 style="color:#22c55e">\u2705 \u062a\u0645 \u0627\u0644\u062f\u0641\u0639 \u0628\u0646\u062c\u0627\u062d!</h1>
-<p>\u0634\u0643\u0631\u0627\u064b \u0644\u0627\u0634\u062a\u0631\u0627\u0643\u0643 \u0641\u064a Guardian Eye.</p>
-<a href="/dashboard" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px">\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645</a>
-</body></html>"""
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Eye — نجاح الدفع</title>
+<link rel="icon" href="/static/logo.png?v=6">
+<link rel="stylesheet" href="/static/css/main.css?v=1">
+<style>
+  .result-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .result-card{width:100%;max-width:440px;text-align:center;padding:40px 32px;
+    background:linear-gradient(180deg,var(--bg-2),var(--bg-1));border:1px solid var(--border);
+    border-radius:var(--r-xl);box-shadow:var(--shadow-2)}
+  .result-ico{width:84px;height:84px;margin:0 auto 20px;border-radius:50%;display:flex;
+    align-items:center;justify-content:center;font-size:40px;
+    background:var(--success-soft);border:2px solid rgba(16,185,129,.45);
+    box-shadow:0 0 40px rgba(16,185,129,.25)}
+  .result-card h1{font-size:22px;font-weight:800;color:var(--text-1);margin-bottom:8px}
+  .result-card p{color:var(--text-3);font-size:13.5px;line-height:1.7;margin-bottom:26px}
+  .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .result-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:26px}
+  .result-brand img{width:36px;height:36px;border-radius:10px;object-fit:cover}
+  .result-brand .bn{font-size:13px;font-weight:800;letter-spacing:.1em;color:var(--text-1)}
+</style>
+</head>
+<body>
+<div class="result-wrap">
+  <div class="result-card">
+    <div class="result-brand">
+      <img src="/static/logo.png?v=6" alt="Guardian Eye">
+      <span class="bn">GUARDIAN EYE</span>
+    </div>
+    <div class="result-ico">✅</div>
+    <h1>تم الدفع بنجاح!</h1>
+    <p>شكرًا لاشتراكك في Guardian Eye.<br>تم تفعيل اشتراكك الآن — عين لا تنام، حارس لا يخطئ.</p>
+    <div class="result-actions">
+      <a href="/dashboard" class="btn btn-primary btn-lg">العودة إلى لوحة التحكم</a>
+      <a href="/stats" class="btn btn-ghost btn-lg">الإحصائيات</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>"""
 
 
 @app.route('/payment/failure')
 def payment_failure():
     return """<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Payment Failed</title></head>
-<body style="font-family:sans-serif;text-align:center;padding:60px;background:#0f172a;color:#fff">
-<h1 style="color:#ef4444">\u274c \u0641\u0634\u0644 \u0627\u0644\u062f\u0641\u0639</h1>
-<p>\u064a\u0631\u062c\u0649 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0645\u0631\u0629 \u0623\u062e\u0631\u0649.</p>
-<a href="/dashboard" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px">\u0627\u0644\u0639\u0648\u062f\u0629</a>
-</body></html>"""
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Eye — فشل الدفع</title>
+<link rel="icon" href="/static/logo.png?v=6">
+<link rel="stylesheet" href="/static/css/main.css?v=1">
+<style>
+  .result-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .result-card{width:100%;max-width:440px;text-align:center;padding:40px 32px;
+    background:linear-gradient(180deg,var(--bg-2),var(--bg-1));border:1px solid var(--border);
+    border-radius:var(--r-xl);box-shadow:var(--shadow-2)}
+  .result-ico{width:84px;height:84px;margin:0 auto 20px;border-radius:50%;display:flex;
+    align-items:center;justify-content:center;font-size:40px;
+    background:var(--danger-soft);border:2px solid rgba(239,68,68,.45);
+    box-shadow:0 0 40px rgba(239,68,68,.22)}
+  .result-card h1{font-size:22px;font-weight:800;color:var(--text-1);margin-bottom:8px}
+  .result-card p{color:var(--text-3);font-size:13.5px;line-height:1.7;margin-bottom:26px}
+  .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .result-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:26px}
+  .result-brand img{width:36px;height:36px;border-radius:10px;object-fit:cover}
+  .result-brand .bn{font-size:13px;font-weight:800;letter-spacing:.1em;color:var(--text-1)}
+</style>
+</head>
+<body>
+<div class="result-wrap">
+  <div class="result-card">
+    <div class="result-brand">
+      <img src="/static/logo.png?v=6" alt="Guardian Eye">
+      <span class="bn">GUARDIAN EYE</span>
+    </div>
+    <div class="result-ico">❌</div>
+    <h1>فشلت عملية الدفع</h1>
+    <p>يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني إذا تكررت المشكلة.</p>
+    <div class="result-actions">
+      <a href="/dashboard" class="btn btn-primary btn-lg">العودة إلى لوحة التحكم</a>
+      <a href="/login" class="btn btn-ghost btn-lg">تسجيل الدخول</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>"""
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

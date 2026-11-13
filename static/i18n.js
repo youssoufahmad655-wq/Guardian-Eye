@@ -36,7 +36,19 @@
         chart_summary: "📈 ملخص",
         chart_hint: "يتم تحديث الإحصائيات عند كل زيارة.",
         pdf_report: "تقرير PDF",
-        subscribe: "اشتراك"
+        subscribe: "اشتراك",
+        nav_main: "القائمة الرئيسية", nav_dashboard: "لوحة التحكم",
+        nav_reports: "التقارير", nav_settings: "الإعدادات",
+        all_time: "كل الأوقات", live: "مباشر",
+        empty_hint: "ارفع فيديو لبدء التحليل",
+        test_alert: "اختبار التنبيه",
+        upload_desc: "يدعم MP4 / AVI / MOV — يُحلَّل الفيديو بالذكاء الاصطناعي ويُحفظ أدلة مقصوصة تلقائيًا.",
+        stats_updated: "تم تحديث الإحصائيات", cleared: "تم المسح",
+        generating_pdf: "جاري إنشاء التقرير...", pdf_done: "تم تحميل التقرير", pdf_failed: "فشل التقرير",
+        redirecting: "جاري التحويل...",
+        enter_coords: "أدخل الإحداثيات أولاً",
+        bad_format: "صيغة خاطئة. استخدم 36.7538,3.0588",
+        out_of_range: "القيم خارج النطاق"
     },
     en: {
         title: "Guardian Eye — Dashboard",
@@ -71,7 +83,20 @@
         recurring_visitors: "Recurring Visitors",
         chart_summary: "📈 Summary",
         chart_hint: "Statistics refresh on every visit.",
-        subscribe: "Subscribe"
+        subscribe: "Subscribe",
+        pdf_report: "PDF Report",
+        nav_main: "Main Menu", nav_dashboard: "Dashboard",
+        nav_reports: "Reports", nav_settings: "Settings",
+        all_time: "All time", live: "Live",
+        empty_hint: "Upload a video to start analysis",
+        test_alert: "Test Alert",
+        upload_desc: "Supports MP4 / AVI / MOV — AI analyzes the video and saves cropped evidence automatically.",
+        stats_updated: "Statistics updated", cleared: "Cleared",
+        generating_pdf: "Generating PDF...", pdf_done: "PDF downloaded", pdf_failed: "PDF failed",
+        redirecting: "Redirecting...",
+        enter_coords: "Enter coordinates first",
+        bad_format: "Invalid format. Use 36.7538,3.0588",
+        out_of_range: "Values out of range"
     },
     fr: {
         title: "Guardian Eye — Tableau de bord",
@@ -106,7 +131,20 @@
         recurring_visitors: "Visiteurs récurrents",
         chart_summary: "📈 Résumé",
         chart_hint: "Les statistiques sont actualisées à chaque visite.",
-        subscribe: "S'abonner"
+        subscribe: "S'abonner",
+        pdf_report: "Rapport PDF",
+        nav_main: "Menu principal", nav_dashboard: "Tableau de bord",
+        nav_reports: "Rapports", nav_settings: "Paramètres",
+        all_time: "Tout le temps", live: "En direct",
+        empty_hint: "Téléversez une vidéo pour démarrer l'analyse",
+        test_alert: "Test d'alerte",
+        upload_desc: "Compatible MP4 / AVI / MOV — l'IA analyse la vidéo et sauvegarde automatiquement les preuves.",
+        stats_updated: "Statistiques actualisées", cleared: "Effacé",
+        generating_pdf: "Génération du PDF...", pdf_done: "PDF téléchargé", pdf_failed: "Échec du PDF",
+        redirecting: "Redirection...",
+        enter_coords: "Saisissez d'abord les coordonnées",
+        bad_format: "Format invalide. Utilisez 36.7538,3.0588",
+        out_of_range: "Valeurs hors limites"
     }
 };
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Guardian Eye{% endblock %}</title>
+<link rel="icon" href="/static/logo.png?v=6">
+<link rel="stylesheet" href="/static/css/main.css?v=1">
+<script src="/static/i18n.js"></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="/static/logo.png?v=6" alt="Guardian Eye" class="logo">
+      <div>
+        <div class="brand-name">GUARDIAN EYE</div>
+        <div class="brand-tag">AI Retail Security</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section" data-i18n="nav_main">القائمة الرئيسية</div>
+
+      <a href="/dashboard" class="nav-item {{ 'active' if request.path in ['/', '/dashboard'] else '' }}">
+        <span class="ico">📊</span><span data-i18n="nav_dashboard">لوحة التحكم</span>
+      </a>
+      <a href="/stats" class="nav-item {{ 'active' if request.path.startswith('/stats') else '' }}">
+        <span class="ico">📈</span><span data-i18n="stats">إحصائيات</span>
+      </a>
+      <button class="nav-item" onclick="if(document.getElementById('uploadModal')){openUploadModal()}else{location.href='/dashboard'}">
+        <span class="ico">📹</span><span data-i18n="upload">رفع فيديو</span>
+      </button>
+
+      <div class="nav-section" data-i18n="nav_reports">التقارير</div>
+
+      <a href="/api/reports/csv" class="nav-item">
+        <span class="ico">📄</span><span data-i18n="report">تقرير CSV</span>
+      </a>
+      <button class="nav-item" id="pdfBtn" onclick="downloadPDF()">
+        <span class="ico">🧾</span><span data-i18n="pdf_report">تقرير PDF</span>
+      </button>
+      <button class="nav-item" id="clearBtn" onclick="clearAll()">
+        <span class="ico">🗑️</span><span data-i18n="clear">مسح الكل</span>
+      </button>
+
+      <div class="nav-section" data-i18n="nav_settings">الإعدادات</div>
+
+      <div class="nav-item" style="cursor:default" title="Volume">
+        <span class="ico">🔊</span>
+        <span class="vol" style="border:none;background:none;padding:0">
+          <button type="button" class="vol-btn" id="volDown">−</button>
+          <span class="vol-track"><span class="vol-fill" id="volumeFill" style="display:block"></span></span>
+          <span class="vol-val" id="volumeValue">70%</span>
+          <button type="button" class="vol-btn" id="volUp">+</button>
+        </span>
+      </div>
+
+      <div class="nav-item" style="cursor:default;flex-wrap:wrap;gap:8px">
+        <span class="ico">📍</span>
+        <input id="manualLoc" class="input" style="flex:1;min-width:110px;padding:6px 9px;font-size:11.5px"
+               placeholder="36.7538,3.0588" data-i18n="location_placeholder">
+        <button class="btn btn-success btn-icon" id="setLocBtn" style="width:32px;height:30px;padding:0" title="📍">📍</button>
+      </div>
+
+      <button class="nav-item" id="testAlertBtn">
+        <span class="ico">🔔</span><span data-i18n="test_alert">اختبار التنبيه</span>
+      </button>
+
+      <a href="/logout" class="nav-item danger">
+        <span class="ico">🚪</span><span data-i18n="logout">خروج</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <span class="live-dot">SYSTEM LIVE</span>
+      <span>Guardian Eye © 2026 — v1.0</span>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-start">
+        <button class="hamburger" id="hamburger" aria-label="menu">☰</button>
+        <div>
+          <div class="page-title">{% block page_title %}لوحة التحكم{% endblock %}</div>
+          <div class="page-sub">{% block page_sub %}مراقبة ذكية لحظية — عين لا تنام{% endblock %}</div>
+        </div>
+      </div>
+
+      <div class="topbar-end">
+        <select id="langSwitcher" class="input" style="padding:7px 10px">
+          <option value="ar">العربية</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+        </select>
+
+        <button class="btn btn-ghost btn-icon" id="refreshBtn" onclick="refreshData(event)" title="Refresh">🔄</button>
+
+        <button onclick="subscribe()" id="subscribeBtn" class="btn btn-success">
+          💳 <span data-i18n="subscribe">اشتراك</span>
+          <span class="badge badge-ghost" style="background:rgba(255,255,255,.22);color:#fff;border-color:transparent">1500 دج</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      © 2026 Guardian Eye — عين لا تنام. حارس لا يخطئ. · AI-Powered Retail Security
+    </footer>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+{% block modals %}{% endblock %}
+
+<script src="/static/js/app.js?v=1"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
