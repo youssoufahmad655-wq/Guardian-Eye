@@ -1,5 +1,9 @@
 # 👁️🛡️ Guardian Eye | عين الحارس
 
+> 🎮 **[Try the Live Demo on Render](https://guardian-eye-demo.onrender.com)** — No installation required.
+
+---
+
 **Retail theft costs small stores 2-3% of annual revenue. Existing AI security systems cost $50-200/month and don't speak Arabic.**
 
 **Guardian Eye is a free, open-source shoplifting detection system that runs on a single 8GB computer. It detects loitering and concealment in real-time, sends GPS-tagged alerts, and works in Arabic, English, and French.**
