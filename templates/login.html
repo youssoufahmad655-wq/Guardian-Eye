@@ -1,207 +1,250 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <link rel="icon" type="image/png" href="/static/logo.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardian Eye | تسجيل الدخول</title>
+<link rel="icon" href="/static/logo.png?v=6">
+<link rel="stylesheet" href="/static/css/main.css?v=1">
+<style>
+  .auth-wrap {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+  }
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian Eye | عين الحارس - تسجيل الدخول</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .login-box {
-            background: #1e293b;
-            padding: 40px 30px;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            text-align: center;
-            width: 100%;
-            max-width: 420px;
-            border: 1px solid #334155;
-        }
-        .logo-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        .guardian-eye {
-            width: 58px;
-            height: 58px;
-            background: linear-gradient(135deg, #ef4444, #3b82f6);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 20px rgba(239,68,68,0.4);
-            flex-shrink: 0;
-        }
-        .eye-ball {
-            width: 36px;
-            height: 24px;
-            background: #f8fafc;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 0 6px rgba(0,0,0,0.35);
-            animation: eyeBlink 4s infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .eye-pupil {
-            width: 13px;
-            height: 13px;
-            background: radial-gradient(circle at 30% 30%, #475569, #0f172a);
-            border-radius: 50%;
-            position: relative;
-            animation: eyeScan 5s ease-in-out infinite;
-        }
-        .eye-pupil::after {
-            content: '';
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #fff;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            opacity: 0.9;
-        }
-        @keyframes eyeBlink {
-            0%, 44%, 56%, 100% { transform: scaleY(1); }
-            48%, 52% { transform: scaleY(0.06); }
-        }
-        @keyframes eyeScan {
-            0%, 100% { transform: translateX(0); }
-            15% { transform: translateX(6px); }
-            35% { transform: translateX(-6px); }
-            50% { transform: translateX(0); }
-            65% { transform: translateX(6px); }
-            85% { transform: translateX(-6px); }
-        }
-        .brand-text {
-            text-align: right;
-        }
-        .brand-name {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: 1.2px;
-            color: #f8fafc;
-        }
-        .brand-tagline {
-            font-size: 10px;
-            color: #94a3b8;
-            letter-spacing: 0.8px;
-            margin-top: 2px;
-        }
-        .subtitle {
-            color: #94a3b8;
-            font-size: 13px;
-            margin-bottom: 28px;
-        }
-        .divider {
-            display: flex;
-            align-items: center;
-            color: #64748b;
-            font-size: 12px;
-            margin: 22px 0;
-        }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #334155;
-        }
-        .divider span { padding: 0 10px; }
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 13px;
-            margin-bottom: 12px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            color: white;
-            transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            opacity: 0.95;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-        .btn-google { background: #db4437; }
-        .btn-github { background: #24292e; }
-        .btn-apple { background: #000; border: 1px solid #333; }
-        .btn svg { width: 20px; height: 20px; }
-        .footer {
-            margin-top: 25px;
-            font-size: 12px;
-            color: #64748b;
-        }
-        .footer a { color: #3b82f6; text-decoration: none; }
-    </style>
+  /* ---------- Visual panel ---------- */
+  .auth-visual {
+    position: relative;
+    background:
+      radial-gradient(800px 500px at 20% 20%, rgba(59,130,246,.28), transparent 60%),
+      radial-gradient(700px 500px at 90% 85%, rgba(239,68,68,.22), transparent 60%),
+      linear-gradient(150deg, #0b1220 0%, #101a2e 55%, #16213a 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 46px;
+    overflow: hidden;
+    border-inline-end: 1px solid var(--border);
+  }
+  .auth-visual::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,.06) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 30%, transparent 78%);
+    pointer-events: none;
+  }
+  .auth-brand { display: flex; align-items: center; gap: 13px; position: relative; z-index: 1; }
+  .auth-brand img { width: 46px; height: 46px; border-radius: 13px; object-fit: cover; box-shadow: 0 6px 20px rgba(59,130,246,.4); }
+
+  .auth-hero { position: relative; z-index: 1; max-width: 470px; }
+  .auth-hero h1 {
+    font-size: clamp(28px, 3.4vw, 42px);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.25;
+    letter-spacing: -.01em;
+    margin-bottom: 16px;
+  }
+  .auth-hero h1 .grad {
+    background: linear-gradient(90deg, #60a5fa, #a78bfa 60%, #f87171);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .auth-hero p { color: var(--text-3); font-size: 14.5px; line-height: 1.75; margin-bottom: 26px; }
+
+  .feature-list { display: flex; flex-direction: column; gap: 13px; }
+  .feature {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--r-md);
+    padding: 12px 15px;
+    font-size: 13px;
+    color: var(--text-2);
+    backdrop-filter: blur(8px);
+  }
+  .feature .f-ico {
+    width: 34px; height: 34px; flex-shrink: 0;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    background: var(--primary-soft);
+    border: 1px solid rgba(59,130,246,.3);
+  }
+
+  .auth-foot { position: relative; z-index: 1; font-size: 11.5px; color: var(--text-4); }
+
+  /* ---------- Form panel ---------- */
+  .auth-form-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 26px;
+    background: var(--bg-0);
+  }
+  .auth-card { width: 100%; max-width: 400px; }
+  .auth-card .eye-badge {
+    width: 66px; height: 66px;
+    background: linear-gradient(135deg, #ef4444, #3b82f6);
+    border-radius: 19px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 14px 36px rgba(239,68,68,.35);
+    margin-bottom: 22px;
+  }
+  .eye-ball {
+    width: 40px; height: 26px;
+    background: #f8fafc;
+    border-radius: 50%;
+    position: relative; overflow: hidden;
+    box-shadow: inset 0 0 7px rgba(0,0,0,.35);
+    animation: eyeBlink 4s infinite;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .eye-pupil {
+    width: 14px; height: 14px;
+    background: radial-gradient(circle at 30% 30%, #475569, #0f172a);
+    border-radius: 50%;
+    position: relative;
+    animation: eyeScan 5s ease-in-out infinite;
+  }
+  .eye-pupil::after {
+    content: ''; position: absolute;
+    width: 4px; height: 4px; background: #fff;
+    border-radius: 50%; top: 2px; left: 2px; opacity: .9;
+  }
+  @keyframes eyeBlink { 0%,44%,56%,100% { transform: scaleY(1); } 48%,52% { transform: scaleY(.06); } }
+  @keyframes eyeScan {
+    0%,100% { transform: translateX(0); }
+    15% { transform: translateX(7px); }
+    35% { transform: translateX(-7px); }
+    50% { transform: translateX(0); }
+    65% { transform: translateX(7px); }
+    85% { transform: translateX(-7px); }
+  }
+
+  .auth-card h2 { font-size: 23px; font-weight: 800; color: var(--text-1); margin-bottom: 7px; }
+  .auth-card .sub { font-size: 13px; color: var(--text-3); margin-bottom: 28px; }
+
+  .auth-divider {
+    display: flex; align-items: center; gap: 14px;
+    color: var(--text-4); font-size: 11.5px;
+    margin: 24px 0;
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .oauth-btn {
+    display: flex; align-items: center; justify-content: center; gap: 11px;
+    width: 100%;
+    padding: 13px;
+    margin-bottom: 11px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-2);
+    color: var(--text-1);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .14s, box-shadow .16s, background .16s, border-color .16s;
+  }
+  .oauth-btn:hover { transform: translateY(-2px); background: var(--bg-3); box-shadow: var(--shadow-2); border-color: #41527a; }
+  .oauth-btn:active { transform: translateY(0); }
+  .oauth-btn svg { width: 19px; height: 19px; }
+  .oauth-btn.google:hover { border-color: rgba(219,68,55,.55); }
+  .oauth-btn.github:hover { border-color: rgba(139,148,158,.55); }
+  .oauth-btn.apple:hover { border-color: rgba(255,255,255,.35); }
+
+  .auth-note {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-4);
+    line-height: 1.7;
+  }
+  .auth-note .dot { color: var(--success); font-weight: 700; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 940px) {
+    .auth-wrap { grid-template-columns: 1fr; }
+    .auth-visual { display: none; }
+    .auth-form-side { min-height: 100vh; }
+  }
+</style>
 </head>
 <body>
-    <div class="login-box">
-        <div class="logo-row">
-            <div class="guardian-eye" title="Guardian Eye is watching">
-                <div class="eye-ball"><div class="eye-pupil"></div></div>
-            </div>
-            <div class="brand-text">
-                <div class="brand-name">GUARDIAN EYE</div>
-                <div class="brand-tagline">AI-POWERED RETAIL SECURITY</div>
-            </div>
-        </div>
 
-        <p class="subtitle">نظام المراقبة الذكية لكشف السرقة</p>
+<div class="auth-wrap">
 
-        <div class="divider"><span>تسجيل الدخول بواسطة</span></div>
-
-        <a href="/auth/google" class="btn btn-google">
-            <svg viewBox="0 0 24 24" fill="white">
-                <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.344-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/>
-            </svg>
-            Google
-        </a>
-
-        <a href="/auth/github" class="btn btn-github">
-            <svg viewBox="0 0 24 24" fill="white">
-                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-            </svg>
-            GitHub
-        </a>
-
-        <a href="/auth/apple" class="btn btn-apple">
-            <svg viewBox="0 0 24 24" fill="white">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-            </svg>
-            Apple
-        </a>
-
-        <div class="footer">
-            محمي بواسطة Guardian Eye &copy; 2026
-        </div>
+  <!-- ============ VISUAL ============ -->
+  <section class="auth-visual">
+    <div class="auth-brand">
+      <img src="/static/logo.png?v=6" alt="Guardian Eye">
+      <div>
+        <div class="brand-name">GUARDIAN EYE</div>
+        <div class="brand-tag">AI-Powered Retail Security</div>
+      </div>
     </div>
+
+    <div class="auth-hero">
+      <h1>عينٌ لا تنام<br><span class="grad">لحماية متجرك</span></h1>
+      <p>
+        نظام أمني ذكي مفتوح المصدر لكشف السرقة في المتاجر — يعمل بالذكاء الاصطناعي على جهاز واحد،
+        ويرسل تنبيهات لحظية مزوّدة بإحداثيات GPS، بالعربية والإنجليزية والفرنسية.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature"><span class="f-ico">🕵️</span> كشف الإخفاء والتمويه لحظيًا بـ YOLOv8</div>
+        <div class="feature"><span class="f-ico">🧠</span> تحقق ثانٍ بالذكاء الاصطناعي (Qwen) لتقليل الإنذارات الكاذبة</div>
+        <div class="feature"><span class="f-ico">📍</span> تنبيهات GPS + مقاطع دليل تلقائية + تقارير PDF/CSV</div>
+      </div>
+    </div>
+
+    <div class="auth-foot">© 2026 Guardian Eye — MIT License · عين لا تنام. حارس لا يخطئ.</div>
+  </section>
+
+  <!-- ============ FORM ============ -->
+  <section class="auth-form-side">
+    <div class="auth-card">
+      <div class="eye-badge">
+        <div class="eye-ball"><div class="eye-pupil"></div></div>
+      </div>
+
+      <h2>مرحبًا بعودتك 👋</h2>
+      <p class="sub">سجّل الدخول للوصول إلى لوحة المراقبة الحية</p>
+
+      <a href="/auth/google" class="oauth-btn google">
+        <svg viewBox="0 0 24 24" fill="#db4437"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.344-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
+        المتابعة عبر Google
+      </a>
+
+      <a href="/auth/github" class="oauth-btn github">
+        <svg viewBox="0 0 24 24" fill="#e6edf3"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        المتابعة عبر GitHub
+      </a>
+
+      <a href="/auth/apple" class="oauth-btn apple">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        المتابعة عبر Apple
+      </a>
+
+      <div class="auth-divider"><span>نظام مراقبة ذكي</span></div>
+
+      <div class="auth-note">
+        <span class="dot">●</span> الحماية عبر OAuth 2.0 — لا نخزّن كلمات مرور<br>
+        محمي بواسطة <strong>Guardian Eye</strong> © 2026
+      </div>
+    </div>
+  </section>
+
+</div>
+
 </body>
 </html>
