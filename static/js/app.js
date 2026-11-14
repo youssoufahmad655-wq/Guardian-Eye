@@ -44,8 +44,10 @@ function setVolume(v) {
   localStorage.setItem('guardian_volume', String(v));
   var f = document.getElementById('volumeFill');
   var l = document.getElementById('volumeValue');
+  var r = document.getElementById('volumeRange');
   if (f) f.style.width = v + '%';
   if (l) l.textContent = v + '%';
+  if (r) { r.value = v; r.style.setProperty('--p', v + '%'); }
 }
 function changeVolume(d) {
   var n = getVolume() + d;
@@ -68,6 +70,47 @@ function playBeep(vol) {
 function triggerTestAlert() {
   if (typeof showAlertNotification === 'function') showAlertNotification({ id: 9999, reason: 'TEST' });
   showToast('Test alert — ' + getVolume() + '%', 'success');
+}
+
+// ---------- SETTINGS MODAL ----------
+function openSettings() {
+  var m = document.getElementById('settingsModal');
+  if (m) m.classList.add('show');
+  refreshSavedLoc();
+  var sb = document.getElementById('sidebar');
+  if (sb && sb.classList.contains('open')) closeSidebar();
+}
+function closeSettings() {
+  var m = document.getElementById('settingsModal');
+  if (m) m.classList.remove('show');
+}
+
+function refreshSavedLoc() {
+  var out = document.getElementById('savedLoc');
+  var wrap = document.getElementById('savedLocWrap');
+  var clr = document.getElementById('clearLocBtn');
+  var input = document.getElementById('manualLoc');
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('manualLocation') || 'null'); } catch (e) {}
+  if (saved && saved.lat != null && saved.lon != null) {
+    if (out) out.textContent = '📌 ' + Number(saved.lat).toFixed(6) + ', ' + Number(saved.lon).toFixed(6);
+    if (wrap) wrap.classList.add('has-loc');
+    if (clr) clr.classList.remove('hidden');
+    if (input && !input.value) input.value = Number(saved.lat).toFixed(6) + ',' + Number(saved.lon).toFixed(6);
+  } else {
+    if (out) out.textContent = tt('no_location', 'لم يُحدد موقع بعد');
+    if (wrap) wrap.classList.remove('has-loc');
+    if (clr) clr.classList.add('hidden');
+  }
+}
+
+function clearManualLocation() {
+  localStorage.removeItem('manualLocation');
+  if (map && userMarker) { map.removeLayer(userMarker); userMarker = null; }
+  var input = document.getElementById('manualLoc');
+  if (input) input.value = '';
+  refreshSavedLoc();
+  showToast(tt('location_removed', 'تمت إزالة الموقع'), 'success');
 }
 
 // ---------- DATE ----------
@@ -178,6 +221,7 @@ function setManualLocation() {
     }).addTo(map).bindPopup('<b>' + tt('map', 'الموقع') + '</b><br>' + lat.toFixed(6) + ', ' + lon.toFixed(6)).openPopup();
     map.setView([lat, lon], 17);
   }
+  refreshSavedLoc();
   showToast(lat.toFixed(6) + ', ' + lon.toFixed(6), 'success');
 }
 
@@ -451,6 +495,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // volume
   try { setVolume(getVolume()); } catch (e) {}
+  try { refreshSavedLoc(); } catch (e) {}
   try { if (typeof requestNotificationPermission === 'function') requestNotificationPermission(); } catch (e) {}
 
   // buttons (single binding — no inline double binding)
@@ -462,12 +507,36 @@ document.addEventListener('DOMContentLoaded', function () {
     uploadBtn: openUploadModal,
     cancelUpload: closeUploadModal,
     startUploadBtn: startUpload,
-    setLocBtn: setManualLocation
+    setLocBtn: setManualLocation,
+    openSettingsBtn: openSettings,
+    closeSettingsBtn: closeSettings,
+    clearLocBtn: clearManualLocation,
+    testSoundBtn: function () {
+      var v = getVolume();
+      if (v <= 0) { showToast(tt('volume_zero', 'الصوت مكتوم'), 'error'); return; }
+      playBeep(v / 100);
+      showToast('🎵 ' + v + '%', 'success');
+    }
   };
   Object.keys(binds).forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', binds[id]);
   });
+
+  // settings modal: backdrop + ESC
+  var sm = document.getElementById('settingsModal');
+  if (sm) sm.addEventListener('click', function (e) { if (e.target === sm) closeSettings(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSettings();
+  });
+
+  // volume range slider (live update, beep only on release)
+  var vr = document.getElementById('volumeRange');
+  if (vr) {
+    vr.style.setProperty('--p', getVolume() + '%');
+    vr.addEventListener('input', function () { setVolume(parseInt(vr.value, 10)); });
+    vr.addEventListener('change', function () { var n = parseInt(vr.value, 10); if (n > 0) playBeep(n / 100); });
+  }
 
   // manual location enter key
   var ml = document.getElementById('manualLoc');

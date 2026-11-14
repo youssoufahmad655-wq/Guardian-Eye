@@ -49,25 +49,9 @@
 
       <div class="nav-section" data-i18n="nav_settings">الإعدادات</div>
 
-      <div class="nav-item" style="cursor:default" title="Volume">
-        <span class="ico">🔊</span>
-        <span class="vol" style="border:none;background:none;padding:0">
-          <button type="button" class="vol-btn" id="volDown">−</button>
-          <span class="vol-track"><span class="vol-fill" id="volumeFill" style="display:block"></span></span>
-          <span class="vol-val" id="volumeValue">70%</span>
-          <button type="button" class="vol-btn" id="volUp">+</button>
-        </span>
-      </div>
-
-      <div class="nav-item" style="cursor:default;flex-wrap:wrap;gap:8px">
-        <span class="ico">📍</span>
-        <input id="manualLoc" class="input" style="flex:1;min-width:110px;padding:6px 9px;font-size:11.5px"
-               placeholder="36.7538,3.0588" data-i18n="location_placeholder">
-        <button class="btn btn-success btn-icon" id="setLocBtn" style="width:32px;height:30px;padding:0" title="📍">📍</button>
-      </div>
-
-      <button class="nav-item" id="testAlertBtn">
-        <span class="ico">🔔</span><span data-i18n="test_alert">اختبار التنبيه</span>
+      <button class="nav-item" id="openSettingsBtn">
+        <span class="ico">⚙️</span><span data-i18n="settings">الإعدادات</span>
+        <span class="nav-chevron">‹</span>
       </button>
 
       <a href="/logout" class="nav-item danger">
@@ -122,6 +106,70 @@
 <div class="toast" id="toast"></div>
 
 {% block modals %}{% endblock %}
+
+<!-- ================= SETTINGS MODAL ================= -->
+<div id="settingsModal" class="modal">
+  <div class="modal-box settings-box">
+    <div class="settings-head">
+      <div class="set-ico set-ico-lg">⚙️</div>
+      <div class="grow">
+        <h2 data-i18n="settings">الإعدادات</h2>
+        <p class="modal-desc" style="margin:0" data-i18n="settings_desc">تخصيص الصوت والتنبيهات وموقع الكاميرا</p>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="closeSettingsBtn" aria-label="close">✕</button>
+    </div>
+
+    <!-- Sound -->
+    <div class="set-group">
+      <div class="set-head">
+        <div class="set-ico">🔊</div>
+        <div class="grow">
+          <div class="set-title" data-i18n="settings_sound">مستوى الصوت</div>
+          <div class="set-desc" data-i18n="settings_sound_desc">شدة صوت التنبيه عند اكتشاف سلوك مشبوه</div>
+        </div>
+      </div>
+      <div class="set-row">
+        <button type="button" class="vol-btn" id="volDown">−</button>
+        <input type="range" id="volumeRange" class="range" min="0" max="100" step="5" value="70">
+        <button type="button" class="vol-btn" id="volUp">+</button>
+        <span class="vol-val" id="volumeValue">70%</span>
+        <button type="button" class="btn btn-ghost" id="testSoundBtn">🎵 <span data-i18n="test_sound">تجربة</span></button>
+      </div>
+    </div>
+
+    <!-- Alert -->
+    <div class="set-group">
+      <div class="set-head">
+        <div class="set-ico" style="background:var(--danger-soft);border-color:rgba(239,68,68,.35)">🔔</div>
+        <div class="grow">
+          <div class="set-title" data-i18n="test_alert">اختبار التنبيه</div>
+          <div class="set-desc" data-i18n="settings_alert_desc">تشغيل تنبيه كامل: صوت + وميض + إشعار المتصفح</div>
+        </div>
+        <button type="button" class="btn btn-danger" id="testAlertBtn" data-i18n="test_alert_run">تشغيل الاختبار</button>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="set-group">
+      <div class="set-head">
+        <div class="set-ico" style="background:var(--success-soft);border-color:rgba(16,185,129,.35)">📍</div>
+        <div class="grow">
+          <div class="set-title" data-i18n="settings_location">موقع الكاميرا</div>
+          <div class="set-desc" data-i18n="settings_location_desc">أدخل الإحداثيات يدويًا (عشري: 36.7538,3.0588 أو DMS)</div>
+        </div>
+      </div>
+      <div class="set-row">
+        <input id="manualLoc" class="input grow" style="min-width:160px"
+               placeholder="36.7538,3.0588" data-i18n="location_placeholder">
+        <button type="button" class="btn btn-success" id="setLocBtn">📍 <span data-i18n="save_location">حفظ الموقع</span></button>
+      </div>
+      <div class="saved-loc" id="savedLocWrap">
+        <span id="savedLoc" data-i18n="no_location">لم يُحدد موقع بعد</span>
+        <button type="button" class="link-btn hidden" id="clearLocBtn" data-i18n="remove_location">إزالة</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="/static/js/app.js?v=1"></script>
 {% block scripts %}{% endblock %}

@@ -48,7 +48,20 @@
         redirecting: "جاري التحويل...",
         enter_coords: "أدخل الإحداثيات أولاً",
         bad_format: "صيغة خاطئة. استخدم 36.7538,3.0588",
-        out_of_range: "القيم خارج النطاق"
+        out_of_range: "القيم خارج النطاق",
+        settings: "الإعدادات",
+        settings_desc: "تخصيص الصوت والتنبيهات وموقع الكاميرا",
+        settings_sound: "مستوى الصوت",
+        settings_sound_desc: "شدة صوت التنبيه عند اكتشاف سلوك مشبوه",
+        test_sound: "تجربة", volume_zero: "الصوت مكتوم",
+        settings_alert_desc: "تشغيل تنبيه كامل: صوت + وميض + إشعار المتصفح",
+        test_alert_run: "تشغيل الاختبار",
+        settings_location: "موقع الكاميرا",
+        settings_location_desc: "أدخل الإحداثيات يدويًا (عشري: 36.7538,3.0588 أو DMS)",
+        save_location: "حفظ الموقع",
+        no_location: "لم يُحدد موقع بعد",
+        remove_location: "إزالة",
+        location_removed: "تمت إزالة الموقع"
     },
     en: {
         title: "Guardian Eye — Dashboard",
@@ -96,7 +109,20 @@
         redirecting: "Redirecting...",
         enter_coords: "Enter coordinates first",
         bad_format: "Invalid format. Use 36.7538,3.0588",
-        out_of_range: "Values out of range"
+        out_of_range: "Values out of range",
+        settings: "Settings",
+        settings_desc: "Customize sound, alerts and camera location",
+        settings_sound: "Sound Level",
+        settings_sound_desc: "Alert volume when suspicious behavior is detected",
+        test_sound: "Test", volume_zero: "Muted",
+        settings_alert_desc: "Run a full alert: sound + flash + browser notification",
+        test_alert_run: "Run Test",
+        settings_location: "Camera Location",
+        settings_location_desc: "Enter coordinates manually (decimal: 36.7538,3.0588 or DMS)",
+        save_location: "Save Location",
+        no_location: "No location set yet",
+        remove_location: "Remove",
+        location_removed: "Location removed"
     },
     fr: {
         title: "Guardian Eye — Tableau de bord",
@@ -144,7 +170,20 @@
         redirecting: "Redirection...",
         enter_coords: "Saisissez d'abord les coordonnées",
         bad_format: "Format invalide. Utilisez 36.7538,3.0588",
-        out_of_range: "Valeurs hors limites"
+        out_of_range: "Valeurs hors limites",
+        settings: "Paramètres",
+        settings_desc: "Personnalisez le son, les alertes et la caméra",
+        settings_sound: "Niveau sonore",
+        settings_sound_desc: "Volume de l'alerte en cas de comportement suspect",
+        test_sound: "Tester", volume_zero: "Muet",
+        settings_alert_desc: "Lance une alerte complète : son + flash + notification",
+        test_alert_run: "Lancer le test",
+        settings_location: "Position de la caméra",
+        settings_location_desc: "Saisissez les coordonnées (décimal : 36.7538,3.0588 ou DMS)",
+        save_location: "Enregistrer",
+        no_location: "Aucune position définie",
+        remove_location: "Retirer",
+        location_removed: "Position retirée"
     }
 };
 
