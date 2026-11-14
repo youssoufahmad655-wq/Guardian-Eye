@@ -31,8 +31,19 @@ db = MockDB()
 
 # === Flask App ===
 app = Flask(__name__)
-CORS(app)
-app.secret_key = os.environ.get('APP_SECRET_KEY', 'demo-secret-key-12345')
+
+# CORS: معطّل افتراضيًا — فعّله عبر متغير البيئة CORS_ORIGINS
+_cors_origins = os.environ.get("CORS_ORIGINS", "").strip()
+if _cors_origins:
+    CORS(app, origins=[o.strip() for o in _cors_origins.split(",") if o.strip()])
+
+# مفتاح الجلسة: من البيئة أو عشوائي آمن (لا مفتاح افتراضي ضعيف)
+app.secret_key = os.environ.get('APP_SECRET_KEY') or os.urandom(32)
+
+# كوكيز جلسة آمن
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
 # === Mock Auth (no real OAuth for demo) ===
 def login_required(f):

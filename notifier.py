@@ -1,14 +1,18 @@
+import os
 import requests
 from datetime import datetime
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 # ═══════════════════════════════════════════════════════════
-# 🔴🔴🔴  عدّل هذين السطرين فقط  🔴🔴🔴
+# البيانات الحساسة تُقرأ من متغيرات البيئة (.env) — لا تكتبها هنا
 # ═══════════════════════════════════════════════════════════
-BOT_TOKEN = "8801071728:AAEq0fX4kPOLKryJ4XsIIxjX1KgXsf1l-1s"
-CHAT_ID  = "7661661604"
-# ═══════════════════════════════════════════════════════════
-# 🔴 لا تعدّل أي شيء بعد هذا السطر 🔴
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 # ═══════════════════════════════════════════════════════════
 
 

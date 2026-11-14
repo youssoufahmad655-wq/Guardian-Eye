@@ -33,8 +33,37 @@ from notifier import TelegramNotifier, BOT_TOKEN, CHAT_ID
 from auth import init_oauth, oauth
 from qwen_verifier import get_verifier
 
+# تثبيت الكاشف (كان محذوفًا بالخطأ في commit 3875a497f)
+try:
+    detector = ShopliftingDetector()
+except Exception as _e:
+    print(f"[WARN] Detector init failed: {_e} — using stub")
+
+    class _StubDetector:
+        def __init__(self, *args, **kwargs):
+            self.total_detections = 0
+            self.suspicious_activities = 0
+            self.model_version = "unavailable"
+        def process_video(self, *args, **kwargs):
+            return {"error": f"detector unavailable: {_e}", "suspicious_events": []}
+        def reset(self):
+            pass
+    detector = _StubDetector()
+
 app = Flask(__name__)
-CORS(app)
+
+# === CORS: معطّل افتراضيًا (الواجهة same-origin) — فعّله فقط عبر البيئة ===
+_cors_origins = os.environ.get("CORS_ORIGINS", "").strip()
+if _cors_origins:
+    CORS(app, origins=[o.strip() for o in _cors_origins.split(",") if o.strip()])
+
+# === حد أقصى لحجم الرفع (MB) — يمنع استهلاك ذاكرة وقرص الخادم ===
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get("MAX_UPLOAD_MB", "500")) * 1024 * 1024
+
+# === إعدادات كوكيز الجلسة الآمنة ===
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
 # === Chargily Pay (Test Mode) ===
 from chargily_pay import ChargilyClient
@@ -51,12 +80,16 @@ print('[Chargily] Initialized (test mode)')
 from jinjalume import Jinjalume
 Jinjalume(app)
 
-app.secret_key = os.environ.get("APP_SECRET_KEY", "dev-secret-key-change-me-in-production")
+_secret = os.environ.get("APP_SECRET_KEY")
+if not _secret:
+    _secret = os.urandom(32)
+    print("[WARN] APP_SECRET_KEY غير مضبوط — تم إنشاء مفتاح عشوائي (الجلسات تُفقد عند إعادة التشغيل)")
+app.secret_key = _secret
 
-app.config['GOOGLE_CLIENT_ID'] = "866024213297-jspu2bhc0f7pfassps4mbetmo9menb27.apps.googleusercontent.com"
-app.config['GOOGLE_CLIENT_SECRET'] = "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"
-app.config['GITHUB_CLIENT_ID'] = "Ov23lilT6mxu1Z72VdEB"
-app.config['GITHUB_CLIENT_SECRET'] = "d16bcc322745752952ee8640c429a5af63013445"
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get("GOOGLE_CLIENT_ID", "866024213297-jspu2bhc0f7pfassps4mbetmo9menb27.apps.googleusercontent.com")
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+app.config['GITHUB_CLIENT_ID'] = os.environ.get("GITHUB_CLIENT_ID", "Ov23lilT6mxu1Z72VdEB")
+app.config['GITHUB_CLIENT_SECRET'] = os.environ.get("GITHUB_CLIENT_SECRET", "")
 app.config['APPLE_CLIENT_ID'] = os.environ.get('APPLE_CLIENT_ID', '')
 app.config['APPLE_CLIENT_SECRET'] = os.environ.get('APPLE_CLIENT_SECRET', '')
 
@@ -79,6 +112,9 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user' not in session:
+            # واجهات API ترد بـ 401 JSON بدل صفحة HTML
+            if request.path.startswith('/api/') or request.accept_mimetypes.best == 'application/json':
+                return jsonify({'error': 'authentication required'}), 401
             return redirect(url_for('login_page'))
         return f(*args, **kwargs)
     return decorated_function
@@ -152,11 +188,21 @@ def stats_page():
 
 
 @app.route('/api/detect', methods=['POST'])
+@login_required
 def detect_shoplifting():
     if 'video' not in request.files:
         return jsonify({'error': 'No video file provided'}), 400
     video_file = request.files['video']
-    video_path = os.path.join(UPLOAD_FOLDER, f'video_{datetime.now().strftime("%Y%m%d_%H%M%S")}.mp4')
+    # التحقق من امتداد ومحتوى الملف (يمنع رفع ملفات تنفيذية)
+    ALLOWED_VIDEO_EXT = {'.mp4', '.avi', '.mov', '.mkv', '.webm', '.m4v'}
+    ALLOWED_VIDEO_MIME = ('video/', 'application/octet-stream')
+    fname = (video_file.filename or '').lower()
+    ext = os.path.splitext(fname)[1]
+    if ext not in ALLOWED_VIDEO_EXT:
+        return jsonify({'error': f'Unsupported file type: {ext or "unknown"}'}), 400
+    if video_file.mimetype and not video_file.mimetype.startswith(ALLOWED_VIDEO_MIME):
+        return jsonify({'error': f'Unsupported content type: {video_file.mimetype}'}), 400
+    video_path = os.path.join(UPLOAD_FOLDER, f'video_{datetime.now().strftime("%Y%m%d_%H%M%S")}{ext}')
     video_file.save(video_path)
     results = detector.process_video(video_path)
     saved_count = 0
@@ -170,16 +216,19 @@ def detect_shoplifting():
 
 
 @app.route('/api/train', methods=['POST'])
+@login_required
 def train_model():
     return jsonify({'status': 'not_implemented'})
 
 
 @app.route('/api/stats', methods=['GET'])
+@login_required
 def get_stats():
     return jsonify({'total_detections': detector.total_detections, 'suspicious_activities': detector.suspicious_activities, 'model_version': detector.model_version})
 
 
 @app.route('/api/events', methods=['GET'])
+@login_required
 def get_events():
     try:
         limit = int(request.args.get('limit', 100))
@@ -192,6 +241,7 @@ def get_events():
 
 
 @app.route('/api/events/<int:event_id>', methods=['GET'])
+@login_required
 def get_event(event_id):
     event = db.get_event(event_id)
     if not event:
@@ -200,17 +250,20 @@ def get_event(event_id):
 
 
 @app.route('/api/events/count', methods=['GET'])
+@login_required
 def count_events():
     return jsonify({'total': db.get_events_count()})
 
 
 @app.route('/api/events', methods=['DELETE'])
+@login_required
 def clear_events():
     db.clear_events()
     return jsonify({'status': 'cleared'})
 
 
 @app.route('/api/notify/test', methods=['POST'])
+@login_required
 def test_notification():
     success = notifier.send_test()
     return jsonify({'success': success, 'enabled': notifier.enabled})
@@ -330,6 +383,7 @@ def export_pdf():
         return jsonify({'error': f'PDF generation failed: {str(e)}'}), 500
 
 @app.route('/api/subscribe', methods=['POST'])
+@login_required
 def create_subscription():
     if not globals().get('CHARGILY_ENABLED', False):
         return jsonify({'error': 'Payment gateway not configured'}), 503

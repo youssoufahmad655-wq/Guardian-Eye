@@ -5,7 +5,7 @@ import time
 import cv2
 import numpy as np
 
-LLAMA_CLI = r"C:\llama.cpp\llama-mtmd-cli.exe"
+LLAMA_CLI = os.environ.get("LLAMA_CLI", r"C:\llama.cpp\llama-mtmd-cli.exe")
 MODEL = "bartowski/Qwen2-VL-2B-Instruct-GGUF:Q4_K_M"
 UPLOAD_DIR = "uploads"
 VERIFY_TIMEOUT = 400

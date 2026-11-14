@@ -12,3 +12,5 @@ services:
         value: "3.11.11"
       - key: APP_SECRET_KEY
         generateValue: true
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
