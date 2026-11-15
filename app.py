@@ -548,6 +548,14 @@ def payment_failure():
 </body>
 </html>"""
 
+@app.route('/privacy')
+def privacy_page():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms_page():
+    return render_template('terms.html')
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
