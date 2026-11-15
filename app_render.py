@@ -125,6 +125,14 @@ def export_pdf():
 def serve_clip(filename):
     return jsonify({'error': 'Video clips are disabled in demo mode.'}), 503
 
+@app.route('/privacy')
+def privacy_page():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms_page():
+    return render_template('terms.html')
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
