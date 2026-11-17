@@ -14,6 +14,32 @@ class MockDB:
     def __init__(self):
         self.events = []
         self.count = 0
+        self.seed_demo_data()
+
+    def seed_demo_data(self):
+        import random
+        from datetime import datetime, timedelta
+        
+        reasons = ["Concealment", "Loitering", "Loitering + Concealment"]
+        
+        for i in range(1, 11):
+            track_id = random.randint(1, 5)
+            lat = 34.963972 + (random.random() - 0.5) * 0.002
+            lon = -1.496417 + (random.random() - 0.5) * 0.002
+            
+            self.events.append({
+                "id": i,
+                "track_id": track_id,
+                "timestamp": round(random.uniform(5, 50), 2),
+                "center": [320, 240],
+                "bbox": [200, 150, 400, 350],
+                "reason": random.choice(reasons),
+                "gps": {"latitude": lat, "longitude": lon},
+                "qwen_verification": "Suspicious" if i % 2 == 0 else "Normal",
+                "is_recurring": (i % 3 == 0),
+                "clip_path": None
+            })
+        self.count = len(self.events)
     def get_events(self, limit=100, offset=0):
         return self.events[:limit]
     def get_events_count(self):
